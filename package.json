@@ -3,7 +3,11 @@
   "version": "0.0.1",
   "description": "iw base package",
   "author": "Benjamin Schmitz",
-  "license": "MIT",
+  "license": "GPL-3.0",
+  "repository": { 
+    "type" : "git",
+    "url" : "https://github.com/Vortex375/iw.git"
+  },
   "scripts": {
     "start": "npm run build && npm run watch",
     "build": "npm run build-ts && npm run tslint && npm run copy-static-assets",
@@ -15,6 +19,7 @@
   },
   "dependencies": {
     "async": "^2.1.2",
+    "deepstream.io": "^2.3.4",
     "lodash": "^4.17.4"
   },
   "devDependencies": {
