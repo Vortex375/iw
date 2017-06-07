@@ -4,9 +4,9 @@
   "description": "iw base package",
   "author": "Benjamin Schmitz",
   "license": "GPL-3.0",
-  "repository": { 
-    "type" : "git",
-    "url" : "https://github.com/Vortex375/iw.git"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Vortex375/iw.git"
   },
   "scripts": {
     "start": "npm run build && npm run watch",
@@ -19,11 +19,16 @@
   },
   "dependencies": {
     "async": "^2.1.2",
+    "bunyan": "^1.8.10",
+    "colors": "^1.1.2",
     "deepstream.io": "^2.3.4",
+    "deepstream.io-client-js": "^2.2.1",
+    "escape-string-regexp": "^1.0.5",
     "lodash": "^4.17.4"
   },
   "devDependencies": {
     "@types/async": "^2.0.40",
+    "@types/bunyan": "0.0.37",
     "@types/lodash": "^4.14.63",
     "@types/node": "^7.0.12",
     "concurrently": "^3.4.0",

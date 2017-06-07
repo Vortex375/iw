@@ -15,3 +15,9 @@
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+import {DeepstreamServer} from "./modules/deepstream-server"
+
+const server = new DeepstreamServer({port: 6020})
+
+server.start()
