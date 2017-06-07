@@ -63,9 +63,10 @@ export class DeepstreamServer extends Service {
   }
 
   start() {
+    this.setState(State.BUSY, "starting up ...")
     /* build configuration for the deepstream server*/
     const deepstreamConfig = {}
-    //deepstreamConfig["showLogo"] = false
+    deepstreamConfig["showLogo"] = false
     deepstreamConfig["connectionEndpoints"] = {
       websocket: {
         name: "uws",

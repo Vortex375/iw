@@ -119,7 +119,7 @@ function updateInstance(instance: Service, updates: any) {
   const serviceObject = INSTANCES.get(instance)
 
   /* print log message about state change */
-  if (updates["state"] !== undefined && updates["state"] !== serviceObject.state) {
+  if (updates["state"] !== undefined) {
     let logLevel = "info"
     switch (updates["state"]) {
       case State.PROBLEM:
@@ -130,9 +130,9 @@ function updateInstance(instance: Service, updates: any) {
     }
     log[logLevel](
       {
-        sub: serviceObject.name,
-        oldState: serviceObject.state,
-        newState: updates["state"]
+        sub: `${serviceObject.type}${serviceObject.name ? ` (${serviceObject.name})` : ""}`,
+        oldState: STATE_NAMES[serviceObject.state],
+        newState: STATE_NAMES[updates["state"]]
       },
       "%s -> %s: %s",
       STATE_COLORS[serviceObject.state](STATE_NAMES[serviceObject.state]),
