@@ -60,6 +60,22 @@ export class Service extends EventEmitter {
   }
 }
 
+const FACTORIES: Map<String, Function> = new Map()
+
+export function registerFactory(type: string, factory: Function): void {
+  FACTORIES.set(type, factory)
+}
+
+export function getInstanceOfType(type: string, ...args: any[]): any {
+  const factory = FACTORIES.get(type)
+
+  if (factory === undefined) {
+    return undefined
+  }
+
+  return factory.apply(undefined, args)
+}
+
 /*
  * registry internal
  */
@@ -125,7 +141,7 @@ function updateInstance(instance: Service, updates: any) {
       case State.PROBLEM:
         logLevel = "warn"
         break
-      case State.PROBLEM:
+      case State.ERROR:
         logLevel = "error"
     }
     log[logLevel](

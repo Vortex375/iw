@@ -1,7 +1,7 @@
 /* Deepstream Server */
 
 import * as logging from "../../lib/logging"
-import {Service, State} from "../../lib/registry"
+import {Service, State, registerFactory} from "../../lib/registry"
 
 import * as _ from "lodash"
 import escapeRegex = require("escape-string-regexp")
@@ -12,6 +12,8 @@ import {EventEmitter} from "events"
 
 const log = logging.getLogger("Deepstream")
 const serverLog = logging.getLogger("Deepstream", "Server")
+
+const SERVICE_TYPE = "deepstream-server"
 
 /* adapter to plug deepstream's logging into our logging */
 class LogAdapter extends EventEmitter {
@@ -58,7 +60,7 @@ export class DeepstreamServer extends Service {
   private port: number
 
   constructor(config: DeepstreamConfig) {
-    super("deepstream-server")
+    super(SERVICE_TYPE)
     this.config = config
   }
 
@@ -108,3 +110,5 @@ export class DeepstreamServer extends Service {
     this.server.stop()
   }
 }
+
+registerFactory(SERVICE_TYPE, (config: DeepstreamConfig) => new DeepstreamServer(config))
