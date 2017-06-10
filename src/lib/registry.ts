@@ -1,5 +1,5 @@
 /* iw Component Registry
- * modules can register here to allow diagnostic introspection at runtime
+ * Modules can register here to allow diagnostic introspection at runtime
  */
 
 import * as logging from "./logging"
@@ -143,6 +143,7 @@ function updateInstance(instance: Service, updates: any) {
         break
       case State.ERROR:
         logLevel = "error"
+        break
     }
     log[logLevel](
       {

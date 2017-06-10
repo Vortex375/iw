@@ -17,7 +17,32 @@
 */
 
 import {DeepstreamServer} from "./modules/deepstream-server"
+import {DeepstreamClient} from "./modules/deepstream-client"
+import {UdpDiscovery} from "./modules/udp-discovery"
+import {UdpAdvertisement} from "./modules/udp-advertisement"
 
-const server = new DeepstreamServer({port: 6020})
+import minimist = require("minimist")
 
-server.start()
+const argv = minimist(process.argv.slice(2))
+
+if (argv["server"]) {
+  const server = new DeepstreamServer({port: 6020})
+  server.start()
+
+  const advertisement = new UdpAdvertisement(6020)
+  advertisement.start(6021, "0.0.0.0", "127.0.0.1")
+
+} else if (argv["client"]) {
+  const client = new DeepstreamClient("test")
+
+  const discovery = new UdpDiscovery()
+
+  client.on("connected", () => discovery.pause())
+  client.on("disconnected", () => discovery.resume())
+  discovery.on("discovered", (addr) => {
+    discovery.pause()
+    client.connect(`${addr.address}:${addr.port}`)
+  })
+
+  discovery.start(6021, "127.0.0.1")
+}

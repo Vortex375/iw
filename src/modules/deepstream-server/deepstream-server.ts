@@ -14,6 +14,17 @@ const log = logging.getLogger("Deepstream")
 const serverLog = logging.getLogger("Deepstream", "Server")
 
 const SERVICE_TYPE = "deepstream-server"
+const DEEPSTREAM_CONFIG = {
+  showLogo: false,
+  connectionEndpoints: {
+    websocket: {
+      name: "uws",
+      options: {
+        port: undefined
+      }
+    }
+  }
+}
 
 /* adapter to plug deepstream's logging into our logging */
 class LogAdapter extends EventEmitter {
@@ -67,16 +78,8 @@ export class DeepstreamServer extends Service {
   start() {
     this.setState(State.BUSY, "starting up ...")
     /* build configuration for the deepstream server*/
-    const deepstreamConfig = {}
-    deepstreamConfig["showLogo"] = false
-    deepstreamConfig["connectionEndpoints"] = {
-      websocket: {
-        name: "uws",
-        options: {
-          port: this.config.port
-        }
-      }
-    }
+    const deepstreamConfig = _.assign({}, DEEPSTREAM_CONFIG)
+    deepstreamConfig.connectionEndpoints.websocket.options.port = this.config.port
 
     if (this.config.persist === undefined || this.config.persist === false) {
       /* exclude everything from storage */

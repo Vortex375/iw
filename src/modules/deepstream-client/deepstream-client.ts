@@ -12,9 +12,13 @@ const log = logging.getLogger("DeepstreamClient")
 
 const SERVICE_TYPE = "deepstream-client"
 const RECONNECT_TIMEOUT = 30000 /*attempt to reconnect after 30 seconds */
+const DEEPSTREAM_CONFIG = {
+  transports: ["websocket"]
+}
 
 interface Subscription  {
-  record: deepstreamIO.Record | undefined
+  record: deepstreamIO.Record | deepstreamIO.List | undefined
+  isList: boolean,
   subscriptions: [string | undefined, (data: any) => void][]
 }
 
@@ -23,12 +27,14 @@ export interface DataProvider {
   stop(record: deepstreamIO.Record, recordName: string)
 }
 
+export type RpcCallback = (data: any, response: deepstreamIO.RPCResponse) => void
+
 export class DeepstreamClient extends Service {
 
   private ds: deepstreamIO.Client | undefined
-  private readonly dataProviders: Map<String, DataProvider[]> = new Map()
-  private readonly rpcProviders: Map<String, Function[]> = new Map()
-  private readonly subscriptions: Map<String, Subscription> = new Map()
+  private readonly dataProviders: Map<string, DataProvider[]> = new Map()
+  private readonly rpcProviders: Map<string, RpcCallback> = new Map()
+  private readonly subscriptions: Map<string, Subscription> = new Map()
 
   private url: string
   private setupComplete: boolean = false
@@ -52,7 +58,7 @@ export class DeepstreamClient extends Service {
 
     /* connect and log in anonymously */
     log.info({url: url}, `Connecting to ${url}`)
-    this.ds = deepstream(url)
+    this.ds = deepstream(url, DEEPSTREAM_CONFIG)
 
     this.ds.on("error", (msg, event, topic) => {
       log.error({event: event, topic: topic}, `${event}: ${msg}`)
@@ -63,13 +69,16 @@ export class DeepstreamClient extends Service {
       switch (state) {
         case "OPEN":
           this.setState(State.OK, `connected to server at ${this.url}`)
+          this.stopReconnect()
           this.afterConnect()
           break
         case "CLOSED":
           this.setState(State.INACTIVE, "connection closed")
+          this.emit("disconnected")
           break
         case "ERROR":
           this.setState(State.ERROR, "connection interrupted")
+          this.emit("disconnected")
           this.reconnect()
           break
         case "RECONNECTING":
@@ -125,11 +134,39 @@ export class DeepstreamClient extends Service {
   }
 
   private afterConnect() {
-    // TODO
+    this.registerOnDeviceList()
+
+    if (this.setupComplete) {
+      this.emit("connected")
+      return
+    }
+
+    /* restore subscriptions */
+    for (const [recordName, sub] of this.subscriptions) {
+      /* get record handle */
+      const record = this.ds.record.getRecord(recordName)
+      sub.record = record
+      for (const [path, callback] of sub.subscriptions) {
+        this.startSubscribe(record, callback, path, false)
+      }
+    }
+
+    /* restore data providers */
+    for (const [pattern, providers] of this.dataProviders) {
+      this.startListen(pattern)
+    }
+
+    /* restore rpc providers */
+    for (const [name, callback] of this.rpcProviders) {
+      this.ds.rpc.provide(name, callback)
+    }
+
+    this.setupComplete = true
+    this.emit("connected")
   }
 
   private registerOnDeviceList(firstTry = true) {
-    log.info `Registering on device-list as devices/${this.getClientName()}`
+    log.info(`Registering on device-list as devices/${this.getClientName()}`)
     const deviceList = this.getList("device-list")
     if (firstTry) {
       deviceList.on("error", (err, msg) => {
@@ -169,6 +206,13 @@ export class DeepstreamClient extends Service {
         resolve(data)
       }))
     })
+  }
+
+  makeRpc(name: string, data: any, callback: (error: string, result?: any) => void) {
+    if ( ! this.ds) {
+      return process.nextTick(() => callback("not connected"))
+    }
+    this.ds.rpc.make(name, data, callback)
   }
 
   provideData(pattern: string, provider: DataProvider) {
@@ -215,13 +259,83 @@ export class DeepstreamClient extends Service {
     }
   }
 
+  subscribe(recordName: string, callback: (data: any) => void,
+      path: string = undefined, now: boolean = true) {
+    this.createSubscription(false, recordName, callback, path, now)
+  }
+
+  subscribeList(recordName: string, callback: (data: any) => void, now: boolean = true) {
+    this.createSubscription(true, recordName, callback, undefined, now)
+  }
+
+  private createSubscription(isList: boolean, recordName: string,
+      callback: (data: any) => void, path: string, now: boolean) {
+    let sub = this.subscriptions.get(recordName)
+    if (sub === undefined) {
+      sub = {
+        record: undefined,
+        isList: isList,
+        subscriptions: []
+      }
+      this.subscriptions.set(recordName, sub)
+    }
+    sub.subscriptions.push([path, callback])
+
+    if (this.setupComplete) {
+      const record = isList ? this.ds.record.getList(recordName) : this.ds.record.getRecord(recordName)
+      sub.record = record
+      this.startSubscribe(record, callback, path, now)
+    }
+  }
+
+  private startSubscribe(record: deepstreamIO.Record | deepstreamIO.List,
+      callback: (data: any) => void, path: string, now: boolean) {
+    if (path) {
+      (<deepstreamIO.Record> record).subscribe(path, callback, now)
+    } else {
+      (<deepstreamIO.Record> record).subscribe(callback, now)
+    }
+  }
+
+  unsubscribe(recordName: string, callback: (data: any) => void) {
+    /* remove callback from list of subscribers */
+    const sub = this.subscriptions.get(recordName)
+    _.remove(sub.subscriptions, (sub) => sub[1] === callback)
+    const record = sub.record
+    if (record) {
+      (<deepstreamIO.Record> record).unsubscribe(callback)
+    }
+    if (sub.subscriptions.length == 0) {
+      this.subscriptions.delete(recordName)
+      if (record) {
+        record.discard()
+      }
+    }
+  }
+
+  provideRpc(name: string, callback: RpcCallback) {
+    this.rpcProviders.set(name, callback)
+
+    if (this.setupComplete) {
+      this.ds.rpc.provide(name, callback)
+    }
+  }
+
+  unprovideRpc(name: string) {
+    this.rpcProviders.delete(name)
+
+    if (this.setupComplete) {
+      this.ds.rpc.unprovide(name)
+    }
+  }
+
   getClientName(): string {
-    return this.friendlyName + "-" + this.getUid()
+    return this.friendlyName + "-" + DeepstreamClient.getUid()
   }
 
   /* this is the getUid() function copied from deepstream
    * so it can be called without having a client instance */
-  getUid(): string {
+  static getUid(): string {
     const timestamp = (new Date()).getTime().toString(36)
     const randomString = (Math.random() * 10000000000000000).toString(36).replace( ".", "" )
 
