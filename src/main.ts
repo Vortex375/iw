@@ -30,7 +30,7 @@ if (argv["server"]) {
   server.start()
 
   const advertisement = new UdpAdvertisement(6020)
-  advertisement.start(6021, "0.0.0.0", "127.0.0.1")
+  advertisement.start(6021)
 
 } else if (argv["client"]) {
   const client = new DeepstreamClient("test")
@@ -44,5 +44,5 @@ if (argv["server"]) {
     client.connect(`${addr.address}:${addr.port}`)
   })
 
-  discovery.start(6021, "127.0.0.1")
+  discovery.start(6021)
 }
