@@ -25,7 +25,8 @@
     "deepstream.io-client-js": "^2.2.1",
     "escape-string-regexp": "^1.0.5",
     "lodash": "^4.17.4",
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.0",
+    "uws": "^0.14.5"
   },
   "devDependencies": {
     "@types/async": "^2.0.40",
