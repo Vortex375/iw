@@ -61,6 +61,7 @@ class LogAdapter extends EventEmitter {
 export interface DeepstreamConfig {
   port: number,
   persist?: boolean | [string]
+  plugins?: any
 }
 
 export class DeepstreamServer extends Service {
@@ -81,13 +82,15 @@ export class DeepstreamServer extends Service {
     const deepstreamConfig = _.assign({}, DEEPSTREAM_CONFIG)
     deepstreamConfig.connectionEndpoints.websocket.options.port = this.config.port
 
+    deepstreamConfig["plugins"] = this.config.plugins
+
     if (this.config.persist === undefined || this.config.persist === false) {
       /* exclude everything from storage */
       deepstreamConfig["storageExclusion"] = /.*/
     } else if (this.config.persist !== true && this.config.persist.length > 0) {
       /* create regular expression that matches everything except paths listed in config.persist */
       const paths = _(this.config.persist).map((s) => `${escapeRegex(s)}`).join("|")
-      const regex = new RegExp(`^(?!(${paths}))\/*.`)
+      const regex = new RegExp(`^(?!(${paths}))\/.*`)
 
       deepstreamConfig["storageExclusion"] = regex
     } /* else persist everything (deepstream default behavior) */

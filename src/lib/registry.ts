@@ -5,9 +5,7 @@
 import * as logging from "./logging"
 
 import * as _ from "lodash"
-/* TODO: type definitions are broken for colors package */
-import _colors = require("colors/safe")
-const colors = _colors as any
+import colors = require("colors/safe")
 
 import {EventEmitter} from "events"
 

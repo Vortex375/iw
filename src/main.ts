@@ -20,21 +20,44 @@ import {DeepstreamServer} from "./modules/deepstream-server"
 import {DeepstreamClient} from "./modules/deepstream-client"
 import {UdpDiscovery} from "./modules/udp-discovery"
 import {UdpAdvertisement} from "./modules/udp-advertisement"
+import {MongoDBQueryProvider} from "./modules/mongodb-query"
+import {DeepstreamHttpBridge} from "./modules/deepstream-http-bridge"
 
 import minimist = require("minimist")
 
 const argv = minimist(process.argv.slice(2))
 
+/* this "startup script" is for testing only */
+
 if (argv["server"]) {
-  const server = new DeepstreamServer({port: 6020})
+  const server = new DeepstreamServer({
+    port: 6020,
+    persist: ["light-control"],
+/*plugins: {
+      storage: {
+        name: "mongodb",
+        options: {
+          connectionString: "mongodb://localhost:27017/iw-deepstream"
+        }
+      }
+    }*/
+  })
   server.start()
 
   const advertisement = new UdpAdvertisement(6020)
   advertisement.start(6021)
 
+  const client = new DeepstreamClient("server")
+  client.connect("localhost:6020")
+
+  const bridge = new DeepstreamHttpBridge(client)
+  bridge.start(6080)
+
+//  const mongodb = new MongoDBQueryProvider(client)
+//  mongodb.connect("mongodb://localhost:27017/iw-db")
+
 } else if (argv["client"]) {
   const client = new DeepstreamClient("test")
-
   const discovery = new UdpDiscovery()
 
   client.on("connected", () => discovery.pause())

@@ -1,5 +1,7 @@
 /* Deepstream Client */
 
+/// <reference types="deepstream.io-client-js" />
+
 import * as logging from "../../lib/logging"
 import {Service, State, registerFactory} from "../../lib/registry"
 
@@ -40,7 +42,7 @@ export class DeepstreamClient extends Service {
   private setupComplete: boolean = false
   private reconnectTimer: NodeJS.Timer | undefined
 
-  constructor(private readonly friendlyName: string = "unknown") {
+  constructor(readonly friendlyName: string = "unknown") {
     super(SERVICE_TYPE)
 
     process.on("exit", () => this.disconnect())
