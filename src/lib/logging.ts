@@ -68,7 +68,7 @@ const streams: bunyan.Stream[] = [{
 
 if (!argv["silent"]) {
   streams.push({
-    stream: new DefaultPrettyPrintStream(),
+    stream: <NodeJS.WritableStream> new DefaultPrettyPrintStream(),
     level: argv["log-level"] || "debug",
     type: "raw"
   })
