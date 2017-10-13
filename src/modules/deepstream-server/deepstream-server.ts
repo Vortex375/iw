@@ -2,25 +2,33 @@
 
 import * as logging from "../../lib/logging"
 import {Service, State, registerFactory} from "../../lib/registry"
-
 import * as _ from "lodash"
 import escapeRegex = require("escape-string-regexp")
 import Deepstream = require("deepstream.io")
-
 import {EventEmitter} from "events"
-
+import {ChannelsServer} from "./channels-server"
 
 const log = logging.getLogger("Deepstream")
 const serverLog = logging.getLogger("Deepstream", "Server")
 
 const SERVICE_TYPE = "deepstream-server"
+const DEFAULT_DEEPSTREAM_PORT = 6020
+const DEFAULT_HTTP_PORT = 6080
+const DEFAULT_CHANNELS_PORT = 6081
+
 const DEEPSTREAM_CONFIG = {
   showLogo: false,
   connectionEndpoints: {
     websocket: {
       name: "uws",
       options: {
-        port: undefined
+        port: DEFAULT_DEEPSTREAM_PORT /* set in the start() method */
+      }
+    },
+    http: {
+      name: "http",
+      options: {
+        port: DEFAULT_HTTP_PORT /* set in the start() method */
       }
     }
   }
@@ -36,19 +44,35 @@ class LogAdapter extends EventEmitter {
     this.server = server
   }
 
+  debug(event, logMessage) {
+    this.log(this.server.constants.LOG_LEVEL.DEBUG, event, logMessage)
+  }
+
+  info(event, logMessage) {
+    this.log(this.server.constants.LOG_LEVEL.INFO, event, logMessage)
+  }
+
+  warn(event, logMessage) {
+    this.log(this.server.constants.LOG_LEVEL.WARN, event, logMessage)
+  }
+
+  error(event, logMessage) {
+    this.log(this.server.constants.LOG_LEVEL.ERROR, event, logMessage)
+  }
+
   log(logLevel, event, logMessage) {
     switch (logLevel) {
       case this.server.constants.LOG_LEVEL.DEBUG:
-          serverLog.debug({event: event}, event + " " + logMessage)
+          serverLog.debug(event + " " + logMessage)
           break
       case this.server.constants.LOG_LEVEL.INFO:
-          serverLog.info({event: event}, event + " " + logMessage)
+          serverLog.info(event + " " + logMessage)
           break
       case this.server.constants.LOG_LEVEL.WARN:
-          serverLog.warn({event: event}, event + " " + logMessage)
+          serverLog.warn(event + " " + logMessage)
           break
       case this.server.constants.LOG_LEVEL.ERROR:
-          serverLog.error({event: event}, event + " " + logMessage)
+          serverLog.error(event + " " + logMessage)
           /* indicate that the server has thrown an error
            * as it doesn't seem to emit 'error' events */
           this.emit("error-msg", logMessage)
@@ -59,7 +83,9 @@ class LogAdapter extends EventEmitter {
 }
 
 export interface DeepstreamConfig {
-  port: number,
+  port?: number,
+  httpPort?: number,
+  channelsPort?: number,
   persist?: boolean | [string]
   plugins?: any
 }
@@ -68,6 +94,7 @@ export class DeepstreamServer extends Service {
 
   private readonly config: DeepstreamConfig
   private server
+  private channels: ChannelsServer
   private logAdapter: LogAdapter
   private port: number
 
@@ -80,7 +107,12 @@ export class DeepstreamServer extends Service {
     this.setState(State.BUSY, "starting up ...")
     /* build configuration for the deepstream server*/
     const deepstreamConfig = _.assign({}, DEEPSTREAM_CONFIG)
-    deepstreamConfig.connectionEndpoints.websocket.options.port = this.config.port
+    if (this.config.port !== undefined) {
+      deepstreamConfig.connectionEndpoints.websocket.options.port = this.config.port
+    }
+    if (this.config.httpPort !== undefined) {
+      deepstreamConfig.connectionEndpoints.http.options.port = this.config.port
+    }
 
     deepstreamConfig["plugins"] = this.config.plugins
 
@@ -110,10 +142,14 @@ export class DeepstreamServer extends Service {
     })
 
     this.server.start()
+
+    this.channels = new ChannelsServer()
+    this.channels.start(this.config.channelsPort || DEFAULT_CHANNELS_PORT)
   }
 
   stop() {
     this.server.stop()
+    this.channels.stop()
   }
 }
 

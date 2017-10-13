@@ -50,9 +50,6 @@ if (argv["server"]) {
   const client = new DeepstreamClient("server")
   client.connect("localhost:6020")
 
-  const bridge = new DeepstreamHttpBridge(client)
-  bridge.start(6080)
-
 //  const mongodb = new MongoDBQueryProvider(client)
 //  mongodb.connect("mongodb://localhost:27017/iw-db")
 
