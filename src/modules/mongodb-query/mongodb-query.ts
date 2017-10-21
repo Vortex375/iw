@@ -1,11 +1,10 @@
 /* MongoDB Query RPC Provider */
 
 import * as logging from "../../lib/logging"
-import {Service, State, registerFactory} from "../../lib/registry"
-import {DeepstreamClient, RpcCallback} from "../deepstream-client"
+import { Service, State } from "../../lib/registry"
+import { DeepstreamClient, RpcCallback } from "../deepstream-client"
 
-import * as _ from "lodash"
-import {MongoClient, Db, Collection} from "mongodb"
+import { MongoClient, Db } from "mongodb"
 
 import * as process from "process"
 

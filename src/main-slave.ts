@@ -16,8 +16,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import {DeepstreamClient} from "./modules/deepstream-client"
-import {UdpDiscovery} from "./modules/udp-discovery"
+import { DeepstreamClient } from "./modules/deepstream-client"
+import { UdpDiscovery } from "./modules/udp-discovery"
 
 import minimist = require("minimist")
 import readline = require("readline")

@@ -1,4 +1,4 @@
-import {Service, State} from "../../lib/registry"
+import { Service, State } from "../../lib/registry"
 import * as logging from "../../lib/logging"
 import WebSocket = require("uws")
 import http = require("http")
@@ -33,7 +33,10 @@ export class ChannelsServer extends Service {
       this.setState(State.OK, `Channels server listening on :${port}`)
     })
     this.wss.on("connection", (ws: WebSocket, req: http.IncomingMessage) => {
-      const requestUrl = url.parse(req.url)
+      /* compatibiliy with ws < 3 */
+      const request = req || ws.upgradeReq
+      log.debug({ws: ws, req: request}, "incoming connection")
+      const requestUrl = url.parse(request.url)
       this.addClient(ws, requestUrl.pathname)
     })
   }

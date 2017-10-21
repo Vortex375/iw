@@ -1,8 +1,12 @@
-/* MongoDB Query RPC Provider */
+/* HTTP access to Deepstream
+ *
+ * Deepstream >= 3.0 now comes with this functionality built-in,
+ * so this module is obsolete.
+ */
 
 import * as logging from "../../lib/logging"
-import {Service, State, registerFactory} from "../../lib/registry"
-import {DeepstreamClient} from "../deepstream-client"
+import { Service, State } from "../../lib/registry"
+import { DeepstreamClient } from "../deepstream-client"
 
 import * as _ from "lodash"
 
@@ -103,7 +107,7 @@ export class DeepstreamHttpBridge extends Service {
           case "POST": { /* update record */
             const record = this.ds.getRecord(name)
             if (body) {
-              _.forEach(body, (value, key) => {
+              _.forEach(body, (value: any, key: string) => {
                 record.set(key, value)
               })
             }

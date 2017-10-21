@@ -7,7 +7,7 @@ import * as logging from "./logging"
 import * as _ from "lodash"
 import colors = require("colors/safe")
 
-import {EventEmitter} from "events"
+import { EventEmitter } from "events"
 
 
 const log = logging.getLogger("Registry")

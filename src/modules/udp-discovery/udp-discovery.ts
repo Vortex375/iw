@@ -1,7 +1,7 @@
 /* Discover server by sending UDP broadcast */
 
 import * as logging from "../../lib/logging"
-import {Service, State, registerFactory} from "../../lib/registry"
+import { Service, State } from "../../lib/registry"
 
 import dgram = require("dgram")
 

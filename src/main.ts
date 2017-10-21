@@ -16,12 +16,10 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import {DeepstreamServer} from "./modules/deepstream-server"
-import {DeepstreamClient} from "./modules/deepstream-client"
-import {UdpDiscovery} from "./modules/udp-discovery"
-import {UdpAdvertisement} from "./modules/udp-advertisement"
-import {MongoDBQueryProvider} from "./modules/mongodb-query"
-import {DeepstreamHttpBridge} from "./modules/deepstream-http-bridge"
+import { DeepstreamServer } from "./modules/deepstream-server"
+import { DeepstreamClient } from "./modules/deepstream-client"
+import { UdpDiscovery } from "./modules/udp-discovery"
+import { UdpAdvertisement } from "./modules/udp-advertisement"
 
 import minimist = require("minimist")
 
@@ -45,7 +43,7 @@ if (argv["server"]) {
   server.start()
 
   const advertisement = new UdpAdvertisement(6020)
-  advertisement.start(6021)
+  advertisement.start(6031)
 
   const client = new DeepstreamClient("server")
   client.connect("localhost:6020")

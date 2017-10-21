@@ -3,7 +3,7 @@
 /// <reference types="deepstream.io-client-js" />
 
 import * as logging from "../../lib/logging"
-import {Service, State, registerFactory} from "../../lib/registry"
+import { Service, State } from "../../lib/registry"
 
 import * as _ from "lodash"
 import * as deepstream from "deepstream.io-client-js"

@@ -1,12 +1,12 @@
 /* Deepstream Server */
 
 import * as logging from "../../lib/logging"
-import {Service, State, registerFactory} from "../../lib/registry"
+import { Service, State, registerFactory } from "../../lib/registry"
 import * as _ from "lodash"
 import escapeRegex = require("escape-string-regexp")
 import Deepstream = require("deepstream.io")
-import {EventEmitter} from "events"
-import {ChannelsServer} from "./channels-server"
+import { EventEmitter } from "events"
+import { ChannelsServer } from "./channels-server"
 
 const log = logging.getLogger("Deepstream")
 const serverLog = logging.getLogger("Deepstream", "Server")
