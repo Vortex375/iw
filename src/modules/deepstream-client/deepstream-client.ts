@@ -31,6 +31,11 @@ export interface DataProvider {
 
 export type RpcCallback = (data: any, response: deepstreamIO.RPCResponse) => void
 
+export interface DeepstreamClientConfig {
+  url: string,
+  friendlyName?: string
+}
+
 export class DeepstreamClient extends Service {
 
   private ds: deepstreamIO.Client | undefined
@@ -39,13 +44,33 @@ export class DeepstreamClient extends Service {
   private readonly subscriptions: Map<string, Subscription> = new Map()
 
   private url: string
+  private friendlyName: string
   private setupComplete: boolean = false
   private reconnectTimer: NodeJS.Timer | undefined
 
-  constructor(readonly friendlyName: string = "unknown") {
+  constructor() {
     super(SERVICE_TYPE)
 
     process.on("exit", () => this.disconnect())
+  }
+
+  start(config: DeepstreamClientConfig) {
+    this.friendlyName = config.friendlyName || "unknown"
+    this.connect(config.url)
+
+    return Promise.resolve()
+  }
+
+  stop() {
+    this.disconnect()
+
+    return Promise.resolve()
+  }
+
+  reconfigure(config: DeepstreamClientConfig) {
+    this.start(config)
+
+    return Promise.resolve(true)
   }
 
   connect(url: string) {
@@ -95,7 +120,9 @@ export class DeepstreamClient extends Service {
       }
     })
 
-    this.ds.login()
+    this.ds.login({
+      username: this.getClientName()
+    })
   }
 
   disconnect() {
@@ -136,8 +163,6 @@ export class DeepstreamClient extends Service {
   }
 
   private afterConnect() {
-    this.registerOnDeviceList()
-
     if (this.setupComplete) {
       this.emit("connected")
       return
@@ -165,19 +190,6 @@ export class DeepstreamClient extends Service {
 
     this.setupComplete = true
     this.emit("connected")
-  }
-
-  private registerOnDeviceList(firstTry = true) {
-    log.info(`Registering on device-list as devices/${this.getClientName()}`)
-    const deviceList = this.getList("device-list")
-    if (firstTry) {
-      deviceList.on("error", (err, msg) => {
-        log.warn({err: err}, `Registration attempt failed: ${msg}`)
-        this.registerOnDeviceList(false)
-      })
-    }
-    deviceList.removeEntry("devices/" + this.getClientName())
-    deviceList.addEntry("devices/" + this.getClientName())
   }
 
   getRecord(name: string): deepstreamIO.Record {

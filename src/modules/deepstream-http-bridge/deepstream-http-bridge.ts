@@ -18,6 +18,10 @@ const log = logging.getLogger("HttpBridge")
 
 const SERVICE_TYPE = "deepstream-http-bridge"
 
+export interface DeepstreamHttpBridgeConfig {
+  port: number
+}
+
 export class DeepstreamHttpBridge extends Service {
 
   private server: http.Server
@@ -28,7 +32,7 @@ export class DeepstreamHttpBridge extends Service {
     process.on("exit", () => this.stop())
   }
 
-  start(port: number) {
+  start(config: DeepstreamHttpBridgeConfig) {
     if (this.server) {
       this.stop()
     }
@@ -55,13 +59,15 @@ export class DeepstreamHttpBridge extends Service {
     })
 
     this.server.on("listening", () => {
-      this.setState(State.OK, `HTTP Server listening on port ${port}`)
+      this.setState(State.OK, `HTTP Server listening on port ${config.port}`)
     })
     this.server.on("error", (err) => {
       log.error({err: err}, "HTTP Server Error")
       this.setState(State.ERROR, "HTTP Server Error")
     })
-    this.server.listen(port)
+    this.server.listen(config.port)
+
+    return Promise.resolve()
   }
 
   stop() {
@@ -70,6 +76,8 @@ export class DeepstreamHttpBridge extends Service {
       this.server = undefined
     }
     this.setState(State.INACTIVE, "HTTP Server closed")
+
+    return Promise.resolve()
   }
 
   private handleRequest(req: http.IncomingMessage, body: any, res: http.ServerResponse) {

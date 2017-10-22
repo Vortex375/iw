@@ -11,15 +11,27 @@ const ERROR_RETRY_TIMEOUT = 10000
 const RESPONSE_MESSAGE = Buffer.from("iw-advertisement")
 const DISCOVERY_MESSAGE = "iw-discovery"
 
+export interface UdpAdvertisementConfig {
+  advertisedPort: number
+  listenPort: number
+  listenAddress?: string
+  broadcastTo?: string
+}
+
 export class UdpAdvertisement extends Service {
 
   private socket: dgram.Socket
+  private advertisedPort: number
 
-  constructor(private advertisedPort: number) {
+  constructor() {
     super("udp-advertisement")
   }
 
-  start(port: number, address = "0.0.0.0", broadcastTo = "255.255.255.255") {
+  start(config: UdpAdvertisementConfig) {
+    this.advertisedPort = config.advertisedPort
+    const port = config.listenPort
+    const address = config.listenAddress || "0.0.0.0"
+    const broadcastTo = config.broadcastTo || "255.255.255.255"
     this.socket = dgram.createSocket("udp4")
 
     this.socket.on("error", (err) => {
@@ -27,13 +39,13 @@ export class UdpAdvertisement extends Service {
       this.setState(State.ERROR, "Socket error")
 
       this.stop()
-      setTimeout(() => this.start(port, address), ERROR_RETRY_TIMEOUT)
+      setTimeout(() => this.start(config), ERROR_RETRY_TIMEOUT)
     })
 
     this.socket.on("listening", () => {
       this.socket.setBroadcast(true)
       this.setState(State.OK, `Waiting for discovery messages on ${address}:${port}`)
-      log.info(`sending advertisement once via broadcast to ${broadcastTo}:${port}`)
+      log.info(`sending advertisement once via broadcast to ${broadcastTo}:${port + 1}`)
       /* broadcast advertisement once */
       this.sendResponse({address: broadcastTo, port: port + 1, family: "udp4"})
     })
@@ -47,6 +59,8 @@ export class UdpAdvertisement extends Service {
     })
 
     this.socket.bind(port, address)
+
+    return Promise.resolve()
   }
 
   private sendResponse(rinfo: dgram.RemoteInfo) {
@@ -57,10 +71,14 @@ export class UdpAdvertisement extends Service {
   }
 
   stop() {
-    this.socket.close()
-    this.socket.removeAllListeners()
-    this.socket.on("error", () => {/* ignore errors from closed socket */})
-    this.socket = undefined
-    this.setState(State.INACTIVE, `Advertisement stopped`)
+    if (this.socket) {
+      this.socket.close()
+      this.socket.removeAllListeners()
+      this.socket.on("error", () => {/* ignore errors from closed socket */})
+      this.socket = undefined
+      this.setState(State.INACTIVE, `Advertisement stopped`)
+    }
+
+    return Promise.resolve()
   }
 }

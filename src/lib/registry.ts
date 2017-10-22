@@ -28,11 +28,19 @@ export const STATE_NAMES = [
 ]
 
 /* base class for services */
-export class Service extends EventEmitter {
+export abstract class Service extends EventEmitter {
   constructor(type: string, initialState: State = State.INACTIVE, name: string = "") {
     super()
 
     registerInstance(type, initialState, name, this)
+  }
+
+  abstract start(config: any): Promise<void>
+
+  abstract stop(): Promise<void>
+
+  reconfigure(config: any): Promise<boolean> {
+    return Promise.resolve(false)
   }
 
   shutdown() {
@@ -56,22 +64,6 @@ export class Service extends EventEmitter {
   setErrorDiagnostic(errorDiagnostic: any) {
     updateInstance(this, {errorDiagnostic: errorDiagnostic})
   }
-}
-
-const FACTORIES: Map<String, Function> = new Map()
-
-export function registerFactory(type: string, factory: Function): void {
-  FACTORIES.set(type, factory)
-}
-
-export function getInstanceOfType(type: string, ...args: any[]): any {
-  const factory = FACTORIES.get(type)
-
-  if (factory === undefined) {
-    return undefined
-  }
-
-  return factory.apply(undefined, args)
 }
 
 /*
@@ -100,12 +92,23 @@ const INSTANCES_BY_TYPE: Map<string, ServiceObject[]> = new Map()
 const INSTANCES: Map<Service, ServiceObject> = new Map()
 let serviceIndex = 0
 
+function getInstanceByType(type: string): Service {
+  /* TODO: for now always returns the first instance */
+
+  const instances = INSTANCES_BY_TYPE.get(type)
+  if (instances === undefined || instances.length == 0) {
+    return undefined
+  }
+
+  return instances[0].instance
+}
+
 function registerInstance(type: string, state: State, name: string, instance: Service) {
   if ( ! INSTANCES_BY_TYPE.has(type)) {
     INSTANCES_BY_TYPE.set(type, [])
   }
 
-  const serviceObject = {
+  const serviceObject: ServiceObject = {
     index: serviceIndex++,
     type: type,
     name: name,

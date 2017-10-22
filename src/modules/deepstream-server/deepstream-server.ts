@@ -1,7 +1,7 @@
 /* Deepstream Server */
 
 import * as logging from "../../lib/logging"
-import { Service, State, registerFactory } from "../../lib/registry"
+import { Service, State } from "../../lib/registry"
 import * as _ from "lodash"
 import escapeRegex = require("escape-string-regexp")
 import Deepstream = require("deepstream.io")
@@ -82,7 +82,7 @@ class LogAdapter extends EventEmitter {
   }
 }
 
-export interface DeepstreamConfig {
+export interface DeepstreamServerConfig {
   port?: number,
   httpPort?: number,
   channelsPort?: number,
@@ -92,36 +92,34 @@ export interface DeepstreamConfig {
 
 export class DeepstreamServer extends Service {
 
-  private readonly config: DeepstreamConfig
   private server
   private channels: ChannelsServer
   private logAdapter: LogAdapter
   private port: number
 
-  constructor(config: DeepstreamConfig) {
+  constructor() {
     super(SERVICE_TYPE)
-    this.config = config
   }
 
-  start() {
+  start(config: DeepstreamServerConfig) {
     this.setState(State.BUSY, "starting up ...")
     /* build configuration for the deepstream server*/
     const deepstreamConfig = _.assign({}, DEEPSTREAM_CONFIG)
-    if (this.config.port !== undefined) {
-      deepstreamConfig.connectionEndpoints.websocket.options.port = this.config.port
+    if (config.port !== undefined) {
+      deepstreamConfig.connectionEndpoints.websocket.options.port = config.port
     }
-    if (this.config.httpPort !== undefined) {
-      deepstreamConfig.connectionEndpoints.http.options.port = this.config.port
+    if (config.httpPort !== undefined) {
+      deepstreamConfig.connectionEndpoints.http.options.port = config.port
     }
 
-    deepstreamConfig["plugins"] = this.config.plugins
+    deepstreamConfig["plugins"] = config.plugins
 
-    if (this.config.persist === undefined || this.config.persist === false) {
+    if (config.persist === undefined || config.persist === false) {
       /* exclude everything from storage */
       deepstreamConfig["storageExclusion"] = /.*/
-    } else if (this.config.persist !== true && this.config.persist.length > 0) {
+    } else if (config.persist !== true && config.persist.length > 0) {
       /* create regular expression that matches everything except paths listed in config.persist */
-      const paths = _(this.config.persist).map((s) => `${escapeRegex(s)}`).join("|")
+      const paths = _(config.persist).map((s) => `${escapeRegex(s)}`).join("|")
       const regex = new RegExp(`^(?!(${paths}))\/.*`)
 
       deepstreamConfig["storageExclusion"] = regex
@@ -135,7 +133,7 @@ export class DeepstreamServer extends Service {
       this.setState(State.ERROR, logMessage)
     })
     this.server.on("started", () => {
-      this.setState(State.OK, `Deepstream server listening on :${this.config.port}`)
+      this.setState(State.OK, `Deepstream server listening on :${config.port}`)
     })
     this.server.on("stopped", () => {
       this.setState(State.INACTIVE, "Deepstream server shut down")
@@ -144,13 +142,15 @@ export class DeepstreamServer extends Service {
     this.server.start()
 
     this.channels = new ChannelsServer()
-    this.channels.start(this.config.channelsPort || DEFAULT_CHANNELS_PORT)
+    this.channels.start({port: config.channelsPort || DEFAULT_CHANNELS_PORT})
+
+    return Promise.resolve()
   }
 
   stop() {
     this.server.stop()
     this.channels.stop()
+
+    return Promise.resolve()
   }
 }
-
-registerFactory(SERVICE_TYPE, (config: DeepstreamConfig) => new DeepstreamServer(config))

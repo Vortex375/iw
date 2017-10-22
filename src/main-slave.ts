@@ -28,7 +28,7 @@ const argv = minimist(process.argv.slice(2))
 
 const RECORD_PATH = "light-control/zone/0"
 
-const client = new DeepstreamClient("test")
+const client = new DeepstreamClient()
 const discovery = new UdpDiscovery()
 
 process.stdin.setEncoding("utf8")
@@ -40,10 +40,14 @@ client.on("connected", () => discovery.pause())
 client.on("disconnected", () => discovery.resume())
 discovery.on("discovered", (addr) => {
   discovery.pause()
-  client.connect(`${addr.address}:${addr.port}`)
+  client.start({
+    url: `${addr.address}:${addr.port}`
+  })
 })
 
-discovery.start(6021)
+discovery.start({
+  port: 6030
+})
 
 client.on("connected", () => {
   const record = client.getRecord(RECORD_PATH)

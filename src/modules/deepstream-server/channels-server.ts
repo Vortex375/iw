@@ -9,6 +9,10 @@ const log = logging.getLogger("Channels")
 
 const SERVICE_TYPE = "channels-server"
 
+export interface ChannelsServerConfig {
+  port: number
+}
+
 export class ChannelsServer extends Service {
   private wss: WebSocket.Server
   private channels: Map<string, WebSocket[]> = new Map()
@@ -17,12 +21,12 @@ export class ChannelsServer extends Service {
     super(SERVICE_TYPE)
   }
 
-  start(port: number) {
+  start(config: ChannelsServerConfig) {
     if (this.wss) {
       this.stop()
     }
 
-    this.wss = new WebSocket.Server({port: port})
+    this.wss = new WebSocket.Server({port: config.port})
     this.setState(State.BUSY)
 
     this.wss.on("error", e => {
@@ -30,7 +34,7 @@ export class ChannelsServer extends Service {
       this.setErrorDiagnostic(e)
     })
     this.wss.on("listening", () => {
-      this.setState(State.OK, `Channels server listening on :${port}`)
+      this.setState(State.OK, `Channels server listening on :${config.port}`)
     })
     this.wss.on("connection", (ws: WebSocket, req: http.IncomingMessage) => {
       /* compatibiliy with ws < 3 */
@@ -39,12 +43,16 @@ export class ChannelsServer extends Service {
       const requestUrl = url.parse(request.url)
       this.addClient(ws, requestUrl.pathname)
     })
+
+    return Promise.resolve()
   }
 
   stop() {
     this.wss.close()
     this.wss = undefined
     this.setState(State.INACTIVE, "Channels server shut down")
+
+    return Promise.resolve()
   }
 
   private addClient(ws: WebSocket, path: string) {

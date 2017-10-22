@@ -12,6 +12,11 @@ const ERROR_RETRY_TIMEOUT = 10000
 const BROADCAST_MESSAGE = Buffer.from("iw-discovery")
 const ADVERTISEMENT_MESSAGE = "iw-advertisement"
 
+export interface UdpDiscoveryConfig {
+  port: number,
+  address?: string
+}
+
 export class UdpDiscovery extends Service {
 
   private socket: dgram.Socket
@@ -23,9 +28,9 @@ export class UdpDiscovery extends Service {
     super("udp-discovery")
   }
 
-  start(port: number, address: string = "255.255.255.255") {
-    this.port = port
-    this.address = address
+  start(config: UdpDiscoveryConfig) {
+    this.port = config.port
+    this.address = config.address || "255.255.255.255"
     this.socket = dgram.createSocket("udp4")
 
     this.socket.on("error", (err) => {
@@ -33,7 +38,7 @@ export class UdpDiscovery extends Service {
       this.setState(State.ERROR, "Socket error")
 
       this.stop()
-      setTimeout(() => this.start(port, address), ERROR_RETRY_TIMEOUT)
+      setTimeout(() => this.start(config), ERROR_RETRY_TIMEOUT)
     })
 
     this.socket.on("listening", () => {
@@ -48,7 +53,9 @@ export class UdpDiscovery extends Service {
       }
     })
 
-    this.socket.bind(port + 1)
+    this.socket.bind(this.port + 1)
+
+    return Promise.resolve()
   }
 
   private doBroadcast() {
@@ -85,5 +92,7 @@ export class UdpDiscovery extends Service {
     this.socket.on("error", () => {/* ignore errors from closed socket */})
     this.socket = undefined
     this.setState(State.INACTIVE, `Discovery stopped`)
+
+    return Promise.resolve()
   }
 }

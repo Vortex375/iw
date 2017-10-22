@@ -28,7 +28,8 @@ const argv = minimist(process.argv.slice(2))
 /* this "startup script" is for testing only */
 
 if (argv["server"]) {
-  const server = new DeepstreamServer({
+  const server = new DeepstreamServer()
+  server.start({
     port: 6020,
     persist: ["light-control"],
 /*plugins: {
@@ -40,27 +41,36 @@ if (argv["server"]) {
       }
     }*/
   })
-  server.start()
 
-  const advertisement = new UdpAdvertisement(6020)
-  advertisement.start(6031)
+  const advertisement = new UdpAdvertisement()
+  advertisement.start({
+    advertisedPort: 6020,
+    listenPort: 6030
+  })
 
-  const client = new DeepstreamClient("server")
-  client.connect("localhost:6020")
+  const client = new DeepstreamClient()
+  client.start({
+    url: "localhost:6020",
+    friendlyName: "server"
+  })
 
 //  const mongodb = new MongoDBQueryProvider(client)
 //  mongodb.connect("mongodb://localhost:27017/iw-db")
 
 } else if (argv["client"]) {
-  const client = new DeepstreamClient("test")
+  const client = new DeepstreamClient()
   const discovery = new UdpDiscovery()
 
   client.on("connected", () => discovery.pause())
   client.on("disconnected", () => discovery.resume())
   discovery.on("discovered", (addr) => {
     discovery.pause()
-    client.connect(`${addr.address}:${addr.port}`)
+    client.start({
+      url: `${addr.address}:${addr.port}`
+    })
   })
 
-  discovery.start(6021)
+  discovery.start({
+    port: 6030
+  })
 }
