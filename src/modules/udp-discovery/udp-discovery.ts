@@ -14,6 +14,7 @@ const ADVERTISEMENT_MESSAGE = "iw-advertisement"
 
 export interface UdpDiscoveryConfig {
   port: number,
+  listenPort?: number,
   address?: string
 }
 
@@ -21,6 +22,7 @@ export class UdpDiscovery extends Service {
 
   private socket: dgram.Socket
   private port: number
+  private listenPort: number
   private address: string
   private broadcastTimer: NodeJS.Timer
 
@@ -30,6 +32,7 @@ export class UdpDiscovery extends Service {
 
   start(config: UdpDiscoveryConfig) {
     this.port = config.port
+    this.listenPort = config.listenPort || config.port + 1
     this.address = config.address || "255.255.255.255"
     this.socket = dgram.createSocket("udp4")
 
@@ -53,7 +56,7 @@ export class UdpDiscovery extends Service {
       }
     })
 
-    this.socket.bind(this.port + 1)
+    this.socket.bind(this.listenPort)
 
     return Promise.resolve()
   }

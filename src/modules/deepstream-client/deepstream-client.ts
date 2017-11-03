@@ -314,6 +314,9 @@ export class DeepstreamClient extends Service {
   unsubscribe(recordName: string, callback: (data: any) => void) {
     /* remove callback from list of subscribers */
     const sub = this.subscriptions.get(recordName)
+    if ( ! sub) {
+      return
+    }
     _.remove(sub.subscriptions, (sub) => sub[1] === callback)
     const record = sub.record
     if (record) {
