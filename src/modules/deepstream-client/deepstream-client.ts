@@ -7,6 +7,7 @@ import { Service, State } from "../../lib/registry"
 
 import * as _ from "lodash"
 import * as deepstream from "deepstream.io-client-js"
+import WebSocket = require("uws")
 
 import * as process from "process"
 
@@ -24,6 +25,12 @@ interface Subscription  {
   subscriptions: [string | undefined, (data: any) => void][]
 }
 
+interface PortConfig {
+  port: number,
+  httpPort: number,
+  channelsPort: number
+}
+
 export interface DataProvider {
   provide(record: deepstreamIO.Record, recordName: string)
   stop(record: deepstreamIO.Record, recordName: string)
@@ -32,7 +39,8 @@ export interface DataProvider {
 export type RpcCallback = (data: any, response: deepstreamIO.RPCResponse) => void
 
 export interface DeepstreamClientConfig {
-  url: string,
+  server: string,
+  port: number,
   friendlyName?: string
 }
 
@@ -45,6 +53,8 @@ export class DeepstreamClient extends Service {
 
   private url: string
   private friendlyName: string
+  private server: string /* hostname/ip of server */
+  private portConfig: PortConfig
   private setupComplete: boolean = false
   private reconnectTimer: NodeJS.Timer | undefined
 
@@ -56,7 +66,8 @@ export class DeepstreamClient extends Service {
 
   start(config: DeepstreamClientConfig) {
     this.friendlyName = config.friendlyName || "unknown"
-    this.connect(config.url)
+    this.server = config.server
+    this.connect(`${config.server}:${config.port}`)
 
     return Promise.resolve()
   }
@@ -188,8 +199,12 @@ export class DeepstreamClient extends Service {
       this.ds.rpc.provide(name, callback)
     }
 
-    this.setupComplete = true
-    this.emit("connected")
+    /* get port configuration for channels */
+    this.getData("server/portConfig").then(portConfig => {
+      this.portConfig = portConfig
+      this.setupComplete = true
+      this.emit("connected")
+    })
   }
 
   getRecord(name: string): deepstreamIO.Record {
@@ -211,12 +226,14 @@ export class DeepstreamClient extends Service {
       record.on("error", (err, msg) => {
         log.error({err: err, message: msg}, `failed to get data for record ${recordName}`)
         record.off()
+        // record.discard()
         reject(err)
       })
 
       record.whenReady(() => process.nextTick( () => {
         const data = record.get()
         record.off()
+        // record.discard()
         resolve(data)
       }))
     })
@@ -238,6 +255,10 @@ export class DeepstreamClient extends Service {
     }
 
     this.dataProviders.get(pattern).push(provider)
+  }
+
+  openChannel(path: string): WebSocket {
+    return new WebSocket(`ws://${this.server}:${this.portConfig.channelsPort}/${path || ""}`)
   }
 
   private startListen(pattern: string) {

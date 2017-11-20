@@ -50,7 +50,8 @@ if (argv["server"]) {
 
   const client = new DeepstreamClient()
   client.start({
-    url: "localhost:6020",
+    server: "localhost",
+    port: 6020,
     friendlyName: "server"
   })
 
@@ -66,7 +67,8 @@ if (argv["server"]) {
   discovery.on("discovered", (addr) => {
     discovery.pause()
     client.start({
-      url: `${addr.address}:${addr.port}`
+      server: addr.address,
+      port: addr.port
     })
   })
 

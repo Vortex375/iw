@@ -41,7 +41,8 @@ client.on("disconnected", () => discovery.resume())
 discovery.on("discovered", (addr) => {
   discovery.pause()
   client.start({
-    url: `${addr.address}:${addr.port}`
+    server: addr.address,
+    port: addr.port
   })
 })
 

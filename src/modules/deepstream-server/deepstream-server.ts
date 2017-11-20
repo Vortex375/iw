@@ -5,6 +5,7 @@ import { Service, State } from "../../lib/registry"
 import * as _ from "lodash"
 import escapeRegex = require("escape-string-regexp")
 import Deepstream = require("deepstream.io")
+import * as deepstreamClient from "deepstream.io-client-js"
 import { EventEmitter } from "events"
 import { ChannelsServer } from "./channels-server"
 
@@ -93,6 +94,7 @@ export interface DeepstreamServerConfig {
 export class DeepstreamServer extends Service {
 
   private server
+  private ds: deepstreamIO.Client
   private channels: ChannelsServer
   private logAdapter: LogAdapter
   private port: number
@@ -144,10 +146,29 @@ export class DeepstreamServer extends Service {
     this.channels = new ChannelsServer()
     this.channels.start({port: config.channelsPort || DEFAULT_CHANNELS_PORT})
 
+    this.server.on("started", () => {
+      this.ds = deepstreamClient(`localhost:${config.port}`)
+      this.ds.login({
+        username: "server-internal"
+      })
+      const serverRecord = this.ds.record.getRecord("server/portConfig")
+      serverRecord.whenReady(() => {
+        serverRecord.set({
+          port: config.port || DEFAULT_DEEPSTREAM_PORT,
+          httpPort: config.httpPort || DEFAULT_HTTP_PORT,
+          channelsPort: config.channelsPort || DEFAULT_CHANNELS_PORT
+        })
+      })
+    })
+
     return Promise.resolve()
   }
 
   stop() {
+    if (this.ds) {
+      this.ds.close()
+      this.ds = undefined
+    }
     this.server.stop()
     this.channels.stop()
 

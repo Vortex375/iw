@@ -56,6 +56,7 @@ export class ChannelsServer extends Service {
   }
 
   private addClient(ws: WebSocket, path: string) {
+    log.debug({channel: path}, "adding client")
     if ( ! this.channels.has(path)) {
       this.channels.set(path, [])
     }
@@ -64,12 +65,17 @@ export class ChannelsServer extends Service {
       log.error({err: e}, "websocket error")
     })
     ws.on("close", (code, reason) => {
-      log.debug({code: code}, "client disconnected")
+      log.debug({code: code, channel: path}, "client disconnected: %s", reason)
       _.pull(this.channels.get(path), ws)
+      ws.removeAllListeners()
     })
     ws.on("message", (data) => {
-      const others = _.reject(this.channels.get(path), other => other == ws)
-      _.forEach(others, other => other.send(data))
+      /* broadcast to all other sockets on the same channel */
+      _.forEach(this.channels.get(path), (other: WebSocket) => {
+        if (other !== ws && other.readyState == WebSocket.OPEN) {
+          other.send(data)
+        }
+      })
     })
   }
 }
