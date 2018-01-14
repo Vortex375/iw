@@ -39,6 +39,7 @@
     "@types/minimist": "^1.2.0",
     "@types/mongodb": "^2.2.13",
     "@types/node": "^8.0.44",
+    "@types/uws": "^0.13.0",
     "concurrently": "^3.5.0",
     "shelljs": "^0.7.7",
     "tslint": "^5.7.0",

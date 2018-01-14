@@ -2,7 +2,9 @@
 
 import * as logging from "../../lib/logging"
 import { Service, State } from "../../lib/registry"
+import { DeepstreamClient, DeepstreamClientConfig } from "../deepstream-client"
 
+import * as _ from "lodash"
 import dgram = require("dgram")
 
 const log = logging.getLogger("UdpDiscovery")
@@ -15,7 +17,8 @@ const ADVERTISEMENT_MESSAGE = "iw-advertisement"
 export interface UdpDiscoveryConfig {
   port: number,
   listenPort?: number,
-  address?: string
+  address?: string,
+  clientConfig?: DeepstreamClientConfig
 }
 
 export class UdpDiscovery extends Service {
@@ -26,8 +29,23 @@ export class UdpDiscovery extends Service {
   private address: string
   private broadcastTimer: NodeJS.Timer
 
-  constructor() {
+  private clientConfig: DeepstreamClientConfig
+
+  constructor(private client?: DeepstreamClient) {
     super("udp-discovery")
+
+    if (this.client) {
+      client.on("connected", () => this.pause())
+      client.on("disconnected", () => this.resume())
+      this.on("discovered", (addr) => {
+        this.pause()
+        const clientConfig = _.assign(this.clientConfig || {}, {
+          server: addr.address,
+          port: addr.port
+        })
+        client.start(clientConfig)
+      })
+    }
   }
 
   start(config: UdpDiscoveryConfig) {
@@ -35,6 +53,7 @@ export class UdpDiscovery extends Service {
     this.listenPort = config.listenPort || config.port + 1
     this.address = config.address || "255.255.255.255"
     this.socket = dgram.createSocket("udp4")
+    this.clientConfig = config.clientConfig
 
     this.socket.on("error", (err) => {
       log.error({err: err}, "Socket error")

@@ -36,7 +36,7 @@ export class ChannelsServer extends Service {
     this.wss.on("listening", () => {
       this.setState(State.OK, `Channels server listening on :${config.port}`)
     })
-    this.wss.on("connection", (ws: WebSocket, req: http.IncomingMessage) => {
+    this.wss.on("connection", (ws: WebSocket, req?: http.IncomingMessage) => {
       /* compatibiliy with ws < 3 */
       const request = req || ws.upgradeReq
       log.debug({ws: ws, req: request}, "incoming connection")

@@ -20,56 +20,26 @@ import { DeepstreamClient } from "./modules/deepstream-client"
 import { UdpDiscovery } from "./modules/udp-discovery"
 
 import minimist = require("minimist")
-import readline = require("readline")
+import fs = require("fs")
 
 const argv = minimist(process.argv.slice(2))
 
 /* this "startup script" is for testing only */
 
-const RECORD_PATH = "light-control/zone/0"
+const CHANNEL_PATH = "light-control/zone/0"
 
 const client = new DeepstreamClient()
-const discovery = new UdpDiscovery()
-
-process.stdin.setEncoding("utf8")
-const rl = readline.createInterface({
-  input: process.stdin
-})
-
-client.on("connected", () => discovery.pause())
-client.on("disconnected", () => discovery.resume())
-discovery.on("discovered", (addr) => {
-  discovery.pause()
-  client.start({
-    server: addr.address,
-    port: addr.port
-  })
-})
+const discovery = new UdpDiscovery(client)
 
 discovery.start({
-  port: 6030
+  port: 6030,
+  listenPort: 6032
 })
 
 client.on("connected", () => {
-  const record = client.getRecord(RECORD_PATH)
-  record.set("brightness", undefined)
-
-  rl.on("line", (line) => {
-    if (line === "") {
-      rl.close()
-      client.disconnect()
-      process.exit(0)
-    }
-
-    const split = line.split(",")
-    record.set("value", {
-      r: parseInt(split[0]),
-      g: parseInt(split[1]),
-      b: parseInt(split[2])
-    })
-  })
-  rl.on("close", () => {
-    client.disconnect()
-    process.exit(0)
+  const channel = client.openChannel(CHANNEL_PATH)
+  
+  channel.on("open", () => {
+    channel.send(Buffer.from([0xFF, 0xFF, 0xFF]))
   })
 })
