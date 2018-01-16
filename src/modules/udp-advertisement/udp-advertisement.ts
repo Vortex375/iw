@@ -12,10 +12,19 @@ const RESPONSE_MESSAGE = Buffer.from("iw-advertisement")
 const DISCOVERY_MESSAGE = "iw-discovery"
 
 export interface UdpAdvertisementConfig {
+  /** Port that is advertised, i.e. the port Deepstream runs on */
   advertisedPort: number
-  listenPort: number
-  listenAddress?: string
-  broadcastTo?: string
+  /** The port where to listen for incoming discovery requests. */
+  requestPort: number
+  /** The address where to listen for incoming discovery requests.
+   * @default "0.0.0.0" */
+  requestAddress?: string
+  /** The port where to send advertisement broadcasts.
+   * @default requestPort + 1 */
+  broadcastPort?: number,
+  /** The broadcast address for advertisement broadcasts.
+   * @default "255.255.255.255" */
+  broadcastAddress?: string
 }
 
 export class UdpAdvertisement extends Service {
@@ -29,9 +38,10 @@ export class UdpAdvertisement extends Service {
 
   start(config: UdpAdvertisementConfig) {
     this.advertisedPort = config.advertisedPort
-    const port = config.listenPort
-    const address = config.listenAddress || "0.0.0.0"
-    const broadcastTo = config.broadcastTo || "255.255.255.255"
+    const requestPort = config.requestPort
+    const requestAddress = config.requestAddress || "0.0.0.0"
+    const broadcastPort = config.broadcastPort || requestPort + 1
+    const broadcastAddress = config.broadcastAddress || "255.255.255.255"
     this.socket = dgram.createSocket("udp4")
 
     this.socket.on("error", (err) => {
@@ -44,10 +54,10 @@ export class UdpAdvertisement extends Service {
 
     this.socket.on("listening", () => {
       this.socket.setBroadcast(true)
-      this.setState(State.OK, `Waiting for discovery messages on ${address}:${port}`)
-      log.info(`sending advertisement once via broadcast to ${broadcastTo}:${port + 1}`)
+      this.setState(State.OK, `Waiting for discovery messages on ${requestAddress}:${requestPort}`)
+      log.info(`sending advertisement once via broadcast to ${broadcastAddress}:${broadcastPort}`)
       /* broadcast advertisement once */
-      this.sendResponse({address: broadcastTo, port: port + 1, family: "udp4"})
+      this.sendResponse({address: broadcastAddress, port: broadcastPort, family: "udp4"})
     })
 
     this.socket.on("message", (msg: Buffer, rinfo: dgram.RemoteInfo) => {
@@ -58,7 +68,7 @@ export class UdpAdvertisement extends Service {
       }
     })
 
-    this.socket.bind(port, address)
+    this.socket.bind(requestPort, requestAddress)
 
     return Promise.resolve()
   }

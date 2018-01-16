@@ -32,8 +32,8 @@ const client = new DeepstreamClient()
 const discovery = new UdpDiscovery(client)
 
 discovery.start({
-  port: 6030,
-  listenPort: 6032
+  requestPort: 6030,
+  broadcastPort: 6032
 })
 
 client.on("connected", () => {

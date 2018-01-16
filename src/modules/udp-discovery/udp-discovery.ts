@@ -15,19 +15,28 @@ const BROADCAST_MESSAGE = Buffer.from("iw-discovery")
 const ADVERTISEMENT_MESSAGE = "iw-advertisement"
 
 export interface UdpDiscoveryConfig {
-  port: number,
-  listenPort?: number,
-  address?: string,
-  clientConfig?: DeepstreamClientConfig
+  /** The port where to send discovery requests. */
+  requestPort: number
+  /** The address where to send discovery requests.
+   * @default "255.255.255.255" */
+  requestAddress?: string
+  /** The port where to listen for advertisement broadcasts.
+   * @default requestPort + 1 */
+  broadcastPort?: number,
+  broadcastAddress?: string
+  /** Configuration used when automatically starting the deepstream client.
+   * Only relevant when passing a client to the constructor.
+   * @default {} */
+  clientConfig?: any
 }
 
 export class UdpDiscovery extends Service {
 
   private socket: dgram.Socket
-  private port: number
-  private listenPort: number
-  private address: string
-  private broadcastTimer: NodeJS.Timer
+  private requestPort: number
+  private requestAddress: string
+  private broadcastPort: number
+  private requestTimer: NodeJS.Timer
 
   private clientConfig: DeepstreamClientConfig
 
@@ -49,9 +58,9 @@ export class UdpDiscovery extends Service {
   }
 
   start(config: UdpDiscoveryConfig) {
-    this.port = config.port
-    this.listenPort = config.listenPort || config.port + 1
-    this.address = config.address || "255.255.255.255"
+    this.requestPort = config.requestPort
+    this.broadcastPort = config.broadcastPort || config.requestPort + 1
+    this.requestAddress = config.requestAddress || "255.255.255.255"
     this.socket = dgram.createSocket("udp4")
     this.clientConfig = config.clientConfig
 
@@ -75,13 +84,13 @@ export class UdpDiscovery extends Service {
       }
     })
 
-    this.socket.bind(this.listenPort)
+    this.socket.bind(this.broadcastPort)
 
     return Promise.resolve()
   }
 
   private doBroadcast() {
-    this.socket.send(BROADCAST_MESSAGE, this.port, this.address)
+    this.socket.send(BROADCAST_MESSAGE, this.requestPort, this.requestAddress)
   }
 
   private parseResponse(msg: Buffer, rinfo: dgram.RemoteInfo) {
@@ -91,19 +100,19 @@ export class UdpDiscovery extends Service {
   }
 
   pause() {
-    if (this.broadcastTimer) {
-      clearInterval(this.broadcastTimer)
-      this.broadcastTimer = undefined
+    if (this.requestTimer) {
+      clearInterval(this.requestTimer)
+      this.requestTimer = undefined
     }
     this.setState(State.INACTIVE, `Discovery suspended`)
   }
 
   resume() {
-    if (this.broadcastTimer) {
+    if (this.requestTimer) {
       return
     }
-    this.broadcastTimer = setInterval(() => this.doBroadcast(), BROADCAST_INTERVAL)
-    this.setState(State.OK, `Discovering server via UDP broadcast to ${this.address}:${this.port}`)
+    this.requestTimer = setInterval(() => this.doBroadcast(), BROADCAST_INTERVAL)
+    this.setState(State.OK, `Discovering server via UDP broadcast to ${this.requestAddress}:${this.requestPort}`)
     this.doBroadcast()
   }
 
