@@ -380,7 +380,7 @@ export class DeepstreamClient extends Service {
     })
     socket.on("open", () => {
       sub.socket = socket
-      log.debug({channel: path}, `sucessfully opened channel ${path}`)
+      log.debug({channel: path}, `successfully opened channel ${path}`)
       for (const proxy of sub.proxies) {
         proxy.emit("open")
       }

@@ -43,10 +43,7 @@ if (argv["server"]) {
   })
 
   const advertisement = new UdpAdvertisement()
-  advertisement.start({
-    advertisedPort: 6020,
-    requestPort: 6030
-  })
+  advertisement.start()
 
   const client = new DeepstreamClient()
   client.start({
@@ -62,7 +59,5 @@ if (argv["server"]) {
   const client = new DeepstreamClient()
   const discovery = new UdpDiscovery(client)
 
-  discovery.start({
-    requestPort: 6030
-  })
+  discovery.start()
 }

@@ -40,6 +40,6 @@ client.on("connected", () => {
   const channel = client.openChannel(CHANNEL_PATH)
   
   channel.on("open", () => {
-    channel.send(Buffer.from([0xFF, 0xFF, 0xFF]))
+    channel.send(Buffer.from([0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF]))
   })
 })

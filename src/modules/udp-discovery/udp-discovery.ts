@@ -9,14 +9,17 @@ import dgram = require("dgram")
 
 const log = logging.getLogger("UdpDiscovery")
 
+export const DEFAULT_REQUEST_PORT = 6030
+
 const BROADCAST_INTERVAL = 5000 /* broadcast every 5s */
 const ERROR_RETRY_TIMEOUT = 10000
 const BROADCAST_MESSAGE = Buffer.from("iw-discovery")
 const ADVERTISEMENT_MESSAGE = "iw-advertisement"
 
 export interface UdpDiscoveryConfig {
-  /** The port where to send discovery requests. */
-  requestPort: number
+  /** The port where to send discovery requests.
+   * @default 6030 */
+  requestPort?: number
   /** The address where to send discovery requests.
    * @default "255.255.255.255" */
   requestAddress?: string
@@ -57,8 +60,8 @@ export class UdpDiscovery extends Service {
     }
   }
 
-  start(config: UdpDiscoveryConfig) {
-    this.requestPort = config.requestPort
+  start(config: UdpDiscoveryConfig = {}) {
+    this.requestPort = config.requestPort || DEFAULT_REQUEST_PORT
     this.broadcastPort = config.broadcastPort || config.requestPort + 1
     this.requestAddress = config.requestAddress || "255.255.255.255"
     this.socket = dgram.createSocket("udp4")

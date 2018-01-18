@@ -2,6 +2,8 @@
 
 import * as logging from "../../lib/logging"
 import { Service, State } from "../../lib/registry"
+import { DEFAULT_DEEPSTREAM_PORT } from "../deepstream-server"
+import { DEFAULT_REQUEST_PORT } from "../udp-discovery"
 
 import dgram = require("dgram")
 
@@ -12,10 +14,13 @@ const RESPONSE_MESSAGE = Buffer.from("iw-advertisement")
 const DISCOVERY_MESSAGE = "iw-discovery"
 
 export interface UdpAdvertisementConfig {
-  /** Port that is advertised, i.e. the port Deepstream runs on */
-  advertisedPort: number
-  /** The port where to listen for incoming discovery requests. */
-  requestPort: number
+  /** Port that is advertised, i.e. the port Deepstream runs on
+   * @default 6020
+   */
+  advertisedPort?: number
+  /** The port where to listen for incoming discovery requests.
+   * @default 6030 */
+  requestPort?: number
   /** The address where to listen for incoming discovery requests.
    * @default "0.0.0.0" */
   requestAddress?: string
@@ -36,9 +41,9 @@ export class UdpAdvertisement extends Service {
     super("udp-advertisement")
   }
 
-  start(config: UdpAdvertisementConfig) {
-    this.advertisedPort = config.advertisedPort
-    const requestPort = config.requestPort
+  start(config: UdpAdvertisementConfig = {}) {
+    this.advertisedPort = config.advertisedPort || DEFAULT_DEEPSTREAM_PORT
+    const requestPort = config.requestPort || DEFAULT_REQUEST_PORT
     const requestAddress = config.requestAddress || "0.0.0.0"
     const broadcastPort = config.broadcastPort || requestPort + 1
     const broadcastAddress = config.broadcastAddress || "255.255.255.255"

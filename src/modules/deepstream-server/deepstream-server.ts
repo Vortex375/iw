@@ -13,9 +13,9 @@ const log = logging.getLogger("Deepstream")
 const serverLog = logging.getLogger("Deepstream", "Server")
 
 const SERVICE_TYPE = "deepstream-server"
-const DEFAULT_DEEPSTREAM_PORT = 6020
-const DEFAULT_HTTP_PORT = 6080
-const DEFAULT_CHANNELS_PORT = 6081
+export const DEFAULT_DEEPSTREAM_PORT = 6020
+export const DEFAULT_HTTP_PORT = 6080
+export const DEFAULT_CHANNELS_PORT = 6081
 
 const DEEPSTREAM_CONFIG = {
   showLogo: false,
