@@ -73,7 +73,7 @@ export class DeepstreamClient extends Service {
   private friendlyName: string
   private server: string /* hostname/ip of server */
   private portConfig: PortConfig
-  
+
   private setupComplete: boolean = false
   private reconnectTimer: NodeJS.Timer | undefined
 
@@ -368,6 +368,11 @@ export class DeepstreamClient extends Service {
       /* no longer interested */
       return
     }
+    if (sub.socket !== undefined) {
+      /* already connected */
+      return
+    }
+    
     log.debug({channel: path}, `connecting socket for channel ${path}`)
     let socket = new WebSocket(`ws://${this.server}:${this.portConfig.channelsPort}/${path || ""}`)
     socket.on("error", (err) => {
