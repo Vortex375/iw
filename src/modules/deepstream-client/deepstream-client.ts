@@ -44,12 +44,12 @@ export interface DataProvider {
 
 export interface Channel {
   send(msg : string|Buffer|ArrayBuffer|Buffer[]) : void
+  close() : void
+  isOpen() : boolean
   on(event: "message", handler : {(msg : string|Buffer|ArrayBuffer|Buffer[]) : any}) : void
   on(event: "open" | "close", handler: {() : any})
   removeListener(event: "message" | "open" | "close", handler: any) : void
   removeAllListeners() : void
-  close() : void
-  isOpen() : boolean
 }
 
 export type RpcCallback = (data: any, response: deepstreamIO.RPCResponse) => void
@@ -63,6 +63,7 @@ export interface DeepstreamClientConfig {
 export class DeepstreamClient extends Service {
 
   private ds: deepstreamIO.Client | undefined
+
   private readonly dataProviders: Map<string, DataProvider[]> = new Map()
   private readonly rpcProviders: Map<string, RpcCallback> = new Map()
   private readonly subscriptions: Map<string, Subscription> = new Map()
@@ -72,6 +73,7 @@ export class DeepstreamClient extends Service {
   private friendlyName: string
   private server: string /* hostname/ip of server */
   private portConfig: PortConfig
+  
   private setupComplete: boolean = false
   private reconnectTimer: NodeJS.Timer | undefined
 
