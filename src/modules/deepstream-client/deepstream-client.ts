@@ -10,6 +10,7 @@ import * as deepstream from "deepstream.io-client-js"
 import WebSocket = require("uws")
 
 import * as process from "process"
+import { EventEmitter } from "events"
 
 const log = logging.getLogger("DeepstreamClient")
 
@@ -25,6 +26,11 @@ interface Subscription  {
   subscriptions: [string | undefined, (data: any) => void][]
 }
 
+interface ChannelSubscription {
+  socket: WebSocket
+  proxies: ChannelProxy[]
+}
+
 interface PortConfig {
   port: number,
   httpPort: number,
@@ -34,6 +40,16 @@ interface PortConfig {
 export interface DataProvider {
   provide(record: deepstreamIO.Record, recordName: string)
   stop(record: deepstreamIO.Record, recordName: string)
+}
+
+export interface Channel {
+  send(msg : string|Buffer|ArrayBuffer|Buffer[]) : void
+  on(event: "message", handler : {(msg : string|Buffer|ArrayBuffer|Buffer[]) : any}) : void
+  on(event: "open" | "close", handler: {() : any})
+  removeListener(event: "message" | "open" | "close", handler: any) : void
+  removeAllListeners() : void
+  close() : void
+  isOpen() : boolean
 }
 
 export type RpcCallback = (data: any, response: deepstreamIO.RPCResponse) => void
@@ -50,6 +66,7 @@ export class DeepstreamClient extends Service {
   private readonly dataProviders: Map<string, DataProvider[]> = new Map()
   private readonly rpcProviders: Map<string, RpcCallback> = new Map()
   private readonly subscriptions: Map<string, Subscription> = new Map()
+  private readonly channelSubscriptions: Map<string, ChannelSubscription> = new Map()
 
   private url: string
   private friendlyName: string
@@ -103,7 +120,7 @@ export class DeepstreamClient extends Service {
     })
 
     this.ds.on("connectionStateChanged", (state) => {
-      log.info({state: state}, "Connection state changed")
+      log.debug({state: state}, "Connection state changed")
       switch (state) {
         case "OPEN":
           this.setState(State.OK, `connected to server at ${this.url}`)
@@ -202,9 +219,22 @@ export class DeepstreamClient extends Service {
     /* get port configuration for channels */
     this.getData("server/portConfig").then(portConfig => {
       this.portConfig = portConfig
-      this.setupComplete = true
-      this.emit("connected")
+      this.afterPortConfig()
     })
+  }
+
+  /* called from afterConnect() after port config is available
+   * to perform setup tasks that require port config */
+  private afterPortConfig() {
+    /* restore Channel connections */
+    for (const [path, sub] of this.channelSubscriptions) {
+      if ( ! sub.socket) {
+        this.connectChannel(path, sub)
+      }
+    }
+
+    this.setupComplete = true
+    this.emit("connected")
   }
 
   getRecord(name: string): deepstreamIO.Record {
@@ -257,10 +287,6 @@ export class DeepstreamClient extends Service {
     this.dataProviders.get(pattern).push(provider)
   }
 
-  openChannel(path: string): WebSocket {
-    return new WebSocket(`ws://${this.server}:${this.portConfig.channelsPort}/${path || ""}`)
-  }
-
   private startListen(pattern: string) {
     this.ds.record.listen(pattern, (match, isSubscribed, response) => {
       const record = this.ds.record.getRecord(match)
@@ -292,6 +318,83 @@ export class DeepstreamClient extends Service {
       }
       this.dataProviders.delete(pattern)
     }
+  }
+
+  openChannel(path: string) : Channel {
+    log.debug({channel: path}, `adding subscription for channel ${path}`)
+
+    let sub = this.channelSubscriptions.get(path)
+    if (sub === undefined) {
+      sub = {
+        socket: undefined,
+        proxies: []
+      }
+      this.channelSubscriptions.set(path, sub)
+    }
+    const proxy = new ChannelProxy(sub)
+    sub.proxies.push(proxy)
+
+    if (sub.socket === undefined && this.setupComplete) {
+      this.connectChannel(path, sub)
+    }
+    
+    proxy.on("_internalClose", () => {
+      log.debug({channel: path}, `removing subscription for channel ${path}`)
+      _.remove(sub.proxies, (p) => p === proxy)
+      if (sub.proxies.length == 0) {
+        log.debug({channel: path}, `no more subscribers for channel ${path}`)
+        this.channelSubscriptions.delete(path)
+        if (sub.socket) {
+          log.debug({channel: path}, `closing channel ${path}`)
+          sub.socket.close()
+        }
+      }
+    })
+    proxy.on("_internalSendMessage", (msg) => {
+      if (sub.socket) {
+        sub.socket.send(msg)
+      } else {
+        log.warn({channel: path}, `message sent to channel ${path} while channel was not connected; message lost`)
+      }
+    })
+
+    return proxy
+  }
+
+  private connectChannel(path: string, sub: ChannelSubscription): void {
+    if (sub.proxies.length == 0) {
+      /* no longer interested */
+      return
+    }
+    log.debug({channel: path}, `connecting socket for channel ${path}`)
+    let socket = new WebSocket(`ws://${this.server}:${this.portConfig.channelsPort}/${path || ""}`)
+    socket.on("error", (err) => {
+      log.error({err: err, channel: path}, `error on channel ${path}`)
+    })
+    socket.on("open", () => {
+      sub.socket = socket
+      log.debug({channel: path}, `sucessfully opened channel ${path}`)
+      for (const proxy of sub.proxies) {
+        proxy.emit("open")
+      }
+    })
+    socket.on("close", (code, reason) => {
+      sub.socket = undefined
+      if (sub.proxies.length > 0) {
+        log.debug({channel: path, code: code, reason: reason}, `channel ${path} closed unexpectedly; reconnecting ...`)
+        setTimeout(() => this.connectChannel(path, sub), RECONNECT_TIMEOUT)
+        for (const proxy of sub.proxies) {
+          proxy.emit("close")
+        }
+      } else {
+        log.debug({channel: path, code: code, reason: reason}, `channel ${path} closed`)
+      }
+    })
+    socket.on("message", (msg) => {
+      for (const proxy of sub.proxies) {
+        proxy.emit("message", msg)
+      }
+    })
   }
 
   subscribe(recordName: string, callback: (data: any) => void,
@@ -378,5 +481,24 @@ export class DeepstreamClient extends Service {
     const randomString = (Math.random() * 10000000000000000).toString(36).replace( ".", "" )
 
     return timestamp + "-" + randomString
+  }
+}
+
+class ChannelProxy extends EventEmitter implements Channel {
+
+  constructor(private subscription: ChannelSubscription) {
+    super()
+  }
+
+  send(msg) {
+    this.emit("_internalSendMessage", msg)
+  }
+
+  close() {
+    this.emit("_internalClose")
+  }
+
+  isOpen() {
+    return this.subscription.socket !== undefined
   }
 }
