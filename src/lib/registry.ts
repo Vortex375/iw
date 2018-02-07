@@ -13,11 +13,16 @@ import { EventEmitter } from "events"
 const log = logging.getLogger("Registry")
 
 export enum State {
-  OK,       /* the module is ready for operation */
-  BUSY,     /* the module is actively handling a request */
-  INACTIVE, /* module was loaded but is currently inactive or unused */
-  PROBLEM,  /* a (possibly recoverable) problem was detected, service may be (temporarily) inhibited */
-  ERROR     /* a fatal error has occured and the module can not continue providing its service */
+  /** the module is ready for operation */
+  OK,
+  /** the module is actively handling a request */
+  BUSY,
+  /** module was loaded but is currently inactive or unused */
+  INACTIVE,
+  /** a (possibly recoverable) problem was detected, service may be (temporarily) inhibited */
+  PROBLEM,
+  /** a fatal error has occured and the module can not continue providing its service */
+  ERROR
 }
 export const STATE_NAMES = [
   "ok",

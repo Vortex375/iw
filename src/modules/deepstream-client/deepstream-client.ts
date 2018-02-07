@@ -170,7 +170,13 @@ export class DeepstreamClient extends Service {
         /* remove record handles from old connection */
         sub.record = undefined
       }
+      for (const [channel, sub] of this.channelSubscriptions) {
+        if (sub.socket) {
+          sub.socket.close()
+        }
+      }
     }
+    this.setState(State.INACTIVE, "disconnected")
   }
 
   reconnect() {
@@ -262,7 +268,7 @@ export class DeepstreamClient extends Service {
         reject(err)
       })
 
-      record.whenReady(() => process.nextTick( () => {
+      record.whenReady(() => process.nextTick(() => {
         const data = record.get()
         record.off()
         // record.discard()
@@ -373,7 +379,7 @@ export class DeepstreamClient extends Service {
       return
     }
     
-    log.debug({channel: path}, `connecting socket for channel ${path}`)
+    log.debug({channel: path, addr: this.server, port: this.portConfig.channelsPort}, `connecting socket for channel ${path}`)
     let socket = new WebSocket(`ws://${this.server}:${this.portConfig.channelsPort}/${path || ""}`)
     socket.on("error", (err) => {
       log.error({err: err, channel: path}, `error on channel ${path}`)
@@ -393,7 +399,7 @@ export class DeepstreamClient extends Service {
         for (const proxy of sub.proxies) {
           proxy.emit("close")
         }
-      } else {
+      } else if (this.setupComplete) {
         log.debug({channel: path, code: code, reason: reason}, `channel ${path} closed`)
       }
     })

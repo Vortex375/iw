@@ -121,10 +121,12 @@ export class UdpDiscovery extends Service {
 
   stop() {
     this.pause()
-    this.socket.close()
-    this.socket.removeAllListeners()
-    this.socket.on("error", () => {/* ignore errors from closed socket */})
-    this.socket = undefined
+    if (this.socket) {
+      this.socket.close()
+      this.socket.removeAllListeners()
+      this.socket.on("error", () => {/* ignore errors from closed socket */})
+      this.socket = undefined
+    }
     this.setState(State.INACTIVE, `Discovery stopped`)
 
     return Promise.resolve()
