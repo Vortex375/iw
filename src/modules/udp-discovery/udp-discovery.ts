@@ -62,7 +62,7 @@ export class UdpDiscovery extends Service {
 
   start(config: UdpDiscoveryConfig = {}) {
     this.requestPort = config.requestPort || DEFAULT_REQUEST_PORT
-    this.broadcastPort = config.broadcastPort || config.requestPort + 1
+    this.broadcastPort = config.broadcastPort || this.requestPort + 1
     this.requestAddress = config.requestAddress || "255.255.255.255"
     this.socket = dgram.createSocket("udp4")
     this.clientConfig = config.clientConfig
