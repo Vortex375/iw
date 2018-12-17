@@ -1,6 +1,6 @@
 import { Service, State } from "../../lib/registry"
 import * as logging from "../../lib/logging"
-import WebSocket = require("uws")
+import WebSocket = require("ws")
 import http = require("http")
 import url = require("url")
 import * as _ from "lodash"
@@ -38,7 +38,7 @@ export class ChannelsServer extends Service {
     })
     this.wss.on("connection", (ws: WebSocket, req?: http.IncomingMessage) => {
       /* compatibiliy with ws < 3 */
-      const request = req || ws.upgradeReq
+      const request = req
       log.debug({ws: ws, req: request}, "incoming connection")
       const requestUrl = url.parse(request.url)
       this.addClient(ws, requestUrl.pathname)

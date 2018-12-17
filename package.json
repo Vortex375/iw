@@ -22,28 +22,30 @@
     "bunyan": "^1.8.12",
     "colors": "^1.1.2",
     "deepstream.io": "^3.1.0",
+    "deepstream.io-cache-redis": "^1.2.0",
     "deepstream.io-client-js": "^2.3.0",
     "escape-string-regexp": "^1.0.5",
     "lodash": "^4.17.4",
     "minimist": "^1.2.0",
-    "uws": "^8.14.1"
+    "ws": "^6.1.2"
   },
   "devDependencies": {
     "@types/async": "^2.0.44",
     "@types/bson": "^1.0.4",
-    "@types/bunyan": "1.8.3",
+    "@types/bunyan": "1.8.5",
     "@types/colors": "^1.1.3",
     "@types/lodash": "^4.14.77",
     "@types/minimist": "^1.2.0",
-    "@types/mongodb": "^2.2.13",
-    "@types/node": "^8.0.44",
-    "@types/uws": "^0.13.0",
-    "concurrently": "^3.5.0",
-    "shelljs": "^0.7.7",
+    "@types/mongodb": "^3.1.17",
+    "@types/node": "^10.12.15",
+    "@types/ws": "^6.0.1",
+    "concurrently": "^4.1.0",
+    "shelljs": "^0.8.3",
     "tslint": "^5.7.0",
-    "typescript": "^2.5.3"
+    "typescript": "^3.1.6"
   },
   "optionalDependencies": {
-    "utf-8-validate": "^3.0.3"
+    "bufferutil": "^4.0.0",
+    "utf-8-validate": "^5.0.1"
   }
 }

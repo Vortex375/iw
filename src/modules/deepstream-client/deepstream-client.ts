@@ -7,7 +7,7 @@ import { Service, State } from "../../lib/registry"
 
 import * as _ from "lodash"
 import * as deepstream from "deepstream.io-client-js"
-import WebSocket = require("uws")
+import WebSocket = require("ws")
 
 import * as process from "process"
 import { EventEmitter } from "events"
