@@ -32,14 +32,21 @@ if (argv["server"]) {
   server.start({
     port: 6020,
     persist: ["light-control"],
-/*plugins: {
-      storage: {
-        name: "mongodb",
+    plugins: {
+      // storage: {
+      //   name: "mongodb",
+      //   options: {
+      //     connectionString: "mongodb://localhost:27017/iw-deepstream"
+      //   }
+      // }
+      cache: {
+        name: "redis",
         options: {
-          connectionString: "mongodb://localhost:27017/iw-deepstream"
+          host: "localhost",
+          port: 6379
         }
       }
-    }*/
+    }
   })
 
   const advertisement = new UdpAdvertisement()

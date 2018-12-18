@@ -21,7 +21,7 @@ const DEEPSTREAM_CONFIG = {
   showLogo: false,
   connectionEndpoints: {
     websocket: {
-      name: "uws",
+      name: "ws",
       options: {
         port: DEFAULT_DEEPSTREAM_PORT /* set in the start() method */
       }
