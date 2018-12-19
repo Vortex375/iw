@@ -23,7 +23,7 @@
     "colors": "^1.1.2",
     "deepstream.io": "github:Vortex375/deepstream.io",
     "deepstream.io-cache-redis": "^1.2.0",
-    "deepstream.io-client-js": "^2.3.0",
+    "deepstream.io-client-js": "github:Vortex375/deepstream.io-client-js",
     "escape-string-regexp": "^1.0.5",
     "lodash": "^4.17.4",
     "minimist": "^1.2.0",
