@@ -12,6 +12,9 @@ import { EventEmitter } from "events"
 
 const log = logging.getLogger("Registry")
 
+/**
+ * Service states.
+ */
 export enum State {
   /** the module is ready for operation */
   OK,
@@ -24,6 +27,8 @@ export enum State {
   /** a fatal error has occured and the module can not continue providing its service */
   ERROR
 }
+
+/* must match enum indices above */
 export const STATE_NAMES = [
   "ok",
   "busy",
@@ -32,7 +37,9 @@ export const STATE_NAMES = [
   "error"
 ]
 
-/* base class for services */
+/**
+ * Base class for Services.
+ */
 export abstract class Service extends EventEmitter {
   constructor(type: string, initialState: State = State.INACTIVE, name: string = "") {
     super()
@@ -69,6 +76,45 @@ export abstract class Service extends EventEmitter {
   setErrorDiagnostic(errorDiagnostic: any) {
     updateInstance(this, {errorDiagnostic: errorDiagnostic})
   }
+}
+
+/*
+ * Registry Introspection
+ */
+let introspectionRecord: deepstreamIO.Record = undefined
+export function setIntrospectionRecord(record: deepstreamIO.Record) {
+  introspectionRecord = record
+  record.set({
+    "services" : _.map(INSTANCES.values(), s => _.omit(s, "instance"))
+  })
+}
+
+function introspectionRegisterInstance(serviceObject: ServiceObject) {
+  if (introspectionRecord === undefined) {
+    return
+  }
+  const services = introspectionRecord.get("services")
+  services.push(_.omit(serviceObject, "instance"))
+  introspectionRecord.set("services", services)
+}
+
+function introspectionDeregisterInstance(serviceObject: ServiceObject) {
+  if (introspectionRecord === undefined) {
+    return
+  }
+  const services = introspectionRecord.get("services")
+  _.remove(services, (s: ServiceObject) => s.index === serviceObject.index)
+  introspectionRecord.set("services", services)
+}
+
+function introspectionUpdateInstace(serviceObject: ServiceObject ) {
+  if (introspectionRecord === undefined) {
+    return
+  }
+  const services = introspectionRecord.get("services")
+  const index = _.findIndex(services, (s: ServiceObject) => s.index === serviceObject.index)
+  services.splice(index, 1, _.omit(serviceObject, "instance"))
+  introspectionRecord.set("services", services)
 }
 
 /*
@@ -127,6 +173,7 @@ function registerInstance(type: string, state: State, name: string, instance: Se
   INSTANCES.set(instance, serviceObject)
 
   log.debug({serviceType: type, name: name}, `registered a new instance ${name} of ${type}`)
+  introspectionRegisterInstance(serviceObject)
 }
 
 function deregisterInstance(instance: Service) {
@@ -135,6 +182,7 @@ function deregisterInstance(instance: Service) {
     INSTANCES.delete(instance)
     _.pull(INSTANCES_BY_TYPE.get(serviceObject.type), serviceObject)
   }
+  introspectionDeregisterInstance(serviceObject)
 }
 
 function updateInstance(instance: Service, updates: any) {
@@ -164,4 +212,5 @@ function updateInstance(instance: Service, updates: any) {
   }
 
   _.assign(serviceObject, updates)
+  introspectionUpdateInstace(serviceObject)
 }
