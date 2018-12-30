@@ -84,9 +84,10 @@ export abstract class Service extends EventEmitter {
 let introspectionRecord: deepstreamIO.Record = undefined
 export function setIntrospectionRecord(record: deepstreamIO.Record) {
   introspectionRecord = record
-  record.set({
-    "services" : _.map(INSTANCES.values(), s => _.omit(s, "instance"))
-  })
+  const content = {
+    "services" : _.map(Array.from(INSTANCES.values()), s => _.omit(s, "instance"))
+  }
+  record.set(content)
 }
 
 function introspectionRegisterInstance(serviceObject: ServiceObject) {
