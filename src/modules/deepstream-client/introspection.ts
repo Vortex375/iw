@@ -111,7 +111,7 @@ export class Introspection {
     const dsRecord = this.client.record.getRecord(path)
     dsRecord.whenReady(() => {
       dsRecord.set(record)
-      log.debug({path: path}, "created record {}", path)
+      log.debug({path: path}, `created record ${path}`)
       dsRecord.discard()
     })
   }
@@ -131,7 +131,7 @@ export class Introspection {
     const dir = this.client.record.getList(path_.posix.join(dirName, INDEX_RECORD))
     dir.whenReady(() => {
       dir.removeEntry(path_.posix.basename(path))
-      log.debug({path: path}, "deleted record {}", path)
+      log.debug({path: path}, `deleted record ${path}`)
       if (dir.isEmpty()) {
         this.rmdir(dirName)
       }
@@ -151,7 +151,7 @@ export class Introspection {
         return
       }
       dir.delete()
-      log.debug({path: path}, "deleted directory {}", path)
+      log.debug({path: path}, `deleted directory ${path}`)
       const parentDirName = path_.posix.dirname(path)
       if (path_.posix.dirname(parentDirName) + "/" === INTROSPECTION_ROOT) {
         /* reached top level */
@@ -169,7 +169,7 @@ export class Introspection {
 
   private mkdirs(path: string) {
     if ( ! path.startsWith(INTROSPECTION_ROOT)) {
-      log.error({path: path}, "invalid path: {}. Must begin with iw-introspection/")
+      log.error({path: path}, `invalid path: ${path}. Must begin with iw-introspection/`)
       throw Error(path + " is invalid. Must begin with iw-introspection/")
     }
     let p = path
@@ -186,7 +186,7 @@ export class Introspection {
     dir.whenReady(() => {
       if ( ! _.includes(dir.getEntries(), basename + "/")) {
         dir.addEntry(basename + "/")
-        log.debug({path: path}, "created directory {}", path)
+        log.debug({path: path}, `created directory ${path}`)
       }
       dir.discard()
     })

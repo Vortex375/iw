@@ -442,6 +442,7 @@ export class DeepstreamClient extends Service {
   subscribe(recordName: string, callback: (data: any) => void,
       path: string = undefined, now: boolean = true) {
     this.createSubscription(false, recordName, callback, path, now)
+    this.introspection.registerRecord(recordName) //TODO: schema
   }
 
   subscribeList(recordName: string, callback: (data: any) => void, now: boolean = true) {
