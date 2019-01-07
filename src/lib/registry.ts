@@ -108,14 +108,16 @@ function introspectionDeregisterInstance(serviceObject: ServiceObject) {
   introspectionRecord.set("services", services)
 }
 
-function introspectionUpdateInstace(serviceObject: ServiceObject ) {
+function introspectionUpdateInstance(serviceObject: ServiceObject ) {
   if (introspectionRecord === undefined) {
     return
   }
-  const services = introspectionRecord.get("services")
+  const services = introspectionRecord.get("services") || []
   const index = _.findIndex(services, (s: ServiceObject) => s.index === serviceObject.index)
-  services.splice(index, 1, _.omit(serviceObject, "instance"))
-  introspectionRecord.set("services", services)
+  if (index >= 0) {
+    services.splice(index, 1, _.omit(serviceObject, "instance"))
+    introspectionRecord.set("services", services)
+  }
 }
 
 /*
@@ -213,5 +215,5 @@ function updateInstance(instance: Service, updates: any) {
   }
 
   _.assign(serviceObject, updates)
-  introspectionUpdateInstace(serviceObject)
+  introspectionUpdateInstance(serviceObject)
 }
