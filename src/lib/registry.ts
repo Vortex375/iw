@@ -82,12 +82,17 @@ export abstract class Service extends EventEmitter {
  * Registry Introspection
  */
 let introspectionRecord: deepstreamIO.Record = undefined
-export function setIntrospectionRecord(record: deepstreamIO.Record) {
-  introspectionRecord = record
-  const content = {
-    "services" : _.map(Array.from(INSTANCES.values()), s => _.omit(s, "instance"))
+export function setIntrospectionRecord(record: deepstreamIO.Record | undefined) {
+  if (introspectionRecord) {
+    introspectionRecord.discard()
   }
-  record.set(content)
+  introspectionRecord = record
+  if (record !== undefined) {
+    const content = {
+      "services" : _.map(Array.from(INSTANCES.values()), s => _.omit(s, "instance"))
+    }
+    record.set(content)
+  }
 }
 
 function introspectionRegisterInstance(serviceObject: ServiceObject) {
@@ -116,8 +121,10 @@ function introspectionUpdateInstance(serviceObject: ServiceObject ) {
   const index = _.findIndex(services, (s: ServiceObject) => s.index === serviceObject.index)
   if (index >= 0) {
     services.splice(index, 1, _.omit(serviceObject, "instance"))
-    introspectionRecord.set("services", services)
+  } else {
+    services.push(_.omit(serviceObject, "instance"))
   }
+  introspectionRecord.set("services", services)
 }
 
 /*
