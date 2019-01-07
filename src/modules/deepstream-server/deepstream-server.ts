@@ -32,7 +32,13 @@ const DEEPSTREAM_CONFIG = {
         port: DEFAULT_HTTP_PORT /* set in the start() method */
       }
     }
-  }
+  },
+  /* less aggressive timeout values */
+  rpcAckTimeout: 5000,
+  rpcTimeout: 60000,
+  cacheRetrievalTimeout: 5000,
+  storageRetrievalTimeout: 10000,
+  dependencyInitialisationTimeout: 20000
 }
 
 /* adapter to plug deepstream's logging into our logging */
