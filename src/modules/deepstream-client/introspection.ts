@@ -64,7 +64,7 @@ export class Introspection {
     const record = {
       name: channelName
     }
-    const path = path_.posix.join(CHANNEL_ROOT, record) 
+    const path = path_.posix.join(CHANNEL_ROOT, channelName) 
     this.create(path, record)
   }
 
