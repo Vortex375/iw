@@ -1,4 +1,4 @@
-"use strict"
+'use strict';
 
 /*
  * Logging
@@ -9,83 +9,83 @@
 
 /// <reference types="node" />
 
-import bunyan   = require("bunyan")
-import process  = require("process")
-import util     = require("util")
-import _        = require("lodash")
-import colors   = require("colors/safe")
-import minimist = require("minimist")
+import bunyan from 'bunyan';
+import process from 'process';
+import util from 'util';
+import _ from 'lodash';
+import colors from 'colors/safe';
+import minimist from 'minimist';
 
-const argv = minimist((process.argv.slice(2)))
+const argv = minimist((process.argv.slice(2)));
 
-const BUNYAN_CORE_FIELDS = ["v", "level", "name", "hostname", "pid", "time", "msg", "src", "tag", "sub"]
+const BUNYAN_CORE_FIELDS = ['v', 'level', 'name', 'hostname', 'pid', 'time', 'msg', 'src', 'tag', 'sub'];
 const colorForLevel = {
-    "10": colors.grey,
-    "20": colors.yellow,
-    "30": colors.blue,
-    "40": (s) => colors.bold(colors.yellow(s)),
-    "50": (s) => colors.bold(colors.red(s)),
-    "60": (s) => colors.inverse(colors.bold(colors.red(s)))
-}
+    10: colors.grey,
+    20: colors.yellow,
+    30: colors.blue,
+    40: (s) => colors.bold(colors.yellow(s)),
+    50: (s) => colors.bold(colors.red(s)),
+    60: (s) => colors.inverse(colors.bold(colors.red(s)))
+};
 
 class DefaultPrettyPrintStream {
     write(rec) {
-      let stack = undefined
-      if (rec.err && rec.err.stack && typeof rec.err.stack === "string") {
-        stack = rec.err.stack
-        rec.err = _.omit(rec.err, "stack")
+      let stack;
+      if (rec.err && rec.err.stack && typeof rec.err.stack === 'string') {
+        stack = rec.err.stack;
+        rec.err = _.omit(rec.err, 'stack');
       }
       const args = _(rec)
-          .pick(_(rec).keys().reject(key => _.includes(BUNYAN_CORE_FIELDS, key)).value())
-          .map((value, key) => util.format("%s=%j", key, value))
-          .join(", ")
+          .pick(_(rec).keys().reject((key) => _.includes(BUNYAN_CORE_FIELDS, key)).value())
+          .map((value, key) => util.format('%s=%j', key, value))
+          .join(', ');
 
       process.stdout.write(util.format(
-          "[%s]\t%s%s: \"%s\" %s\n",
+          '[%s]\t%s%s: "%s" %s\n',
           // TODO: <any> cast required here because type is broken
-          colorForLevel[rec.level]((<any> bunyan).nameFromLevel[rec.level]),
-          colors.bold(colors.cyan(rec.tag || "MAIN")),
-          rec.sub ? "/" + colors.cyan(rec.sub) : "",
+          colorForLevel[rec.level]((bunyan as any).nameFromLevel[rec.level]),
+          colors.bold(colors.cyan(rec.tag || 'MAIN')),
+          rec.sub ? '/' + colors.cyan(rec.sub) : '',
           rec.msg,
-          colors.grey("(" + args + ")")
-      ))
+          colors.grey('(' + args + ')')
+      ));
       if (stack) {
-        process.stdout.write(`${colors.inverse(colors.bold(colors.red(("stack"))))} `)
-        process.stdout.write(stack)
-        process.stdout.write("\n")
+        process.stdout.write(`${colors.inverse(colors.bold(colors.red(('stack'))))} `);
+        process.stdout.write(stack);
+        process.stdout.write('\n');
       }
   }
 }
 
-const ringbuffer = new bunyan.RingBuffer({limit: 500})
+const ringbuffer = new bunyan.RingBuffer({limit: 500});
 
 const streams: bunyan.Stream[] = [{
     stream: ringbuffer,
-    level: "trace",
-    type: "raw"
+    level: 'trace',
+    type: 'raw'
   }
-]
+];
 
-if (!argv["silent"]) {
+if (!argv.silent) {
   streams.push({
-    stream: <NodeJS.WritableStream> new DefaultPrettyPrintStream(),
-    level: argv["log-level"] || "debug",
-    type: "raw"
-  })
+    stream: new DefaultPrettyPrintStream() as NodeJS.WritableStream,
+    level: argv['log-level'] || 'debug',
+    type: 'raw'
+  });
 }
 
-if (argv["log"]) {
+if (argv.log) {
   streams.push({
-    path: argv["log"]
-  })
+    path: argv.log
+  });
 }
 
 export const rootLogger = bunyan.createLogger({
-  name: "datacollection",
+  name: 'datacollection',
   serializers: bunyan.stdSerializers,
-  streams: streams
-})
+  streams
+});
 
 export function getLogger(tag: string, sub?: string): bunyan {
-  return rootLogger.child({tag: tag, sub: sub})
+  return rootLogger.child({tag, sub});
 }

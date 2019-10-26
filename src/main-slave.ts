@@ -16,86 +16,81 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { DeepstreamClient, Channel } from "./modules/deepstream-client"
-import { UdpDiscovery } from "./modules/udp-discovery"
-
-import minimist = require("minimist")
-import fs = require("fs")
-
-const argv = minimist(process.argv.slice(2))
+import { DeepstreamClient } from './modules/deepstream-client';
+import { UdpDiscovery } from './modules/udp-discovery';
 
 /* this "startup script" is for testing only */
 
-const RECORD_PATH  = "light-control/zone/0"
-const CHANNEL_PATH = "light-control/zone/0"
+const RECORD_PATH  = 'light-control/zone/0';
+const CHANNEL_PATH = 'light-control/zone/0';
 
-const client = new DeepstreamClient()
-const discovery = new UdpDiscovery(client)
+const client = new DeepstreamClient();
+const discovery = new UdpDiscovery(client);
 
 discovery.start({
   requestPort: 6030,
   broadcastPort: 6032
-})
+});
 
-const channel = client.openChannel(CHANNEL_PATH)
-channel.on("open", () => {
-  readStdinData()
-})
+const channel = client.openChannel(CHANNEL_PATH);
+channel.on('open', () => {
+  readStdinData();
+});
 
-client.on("connected", () => {
-  let record = client.getRecord(RECORD_PATH)
-  record.set("channel", CHANNEL_PATH)
-})
+client.on('connected', () => {
+  const record = client.getRecord(RECORD_PATH);
+  record.set('channel', CHANNEL_PATH as any);
+});
 
-let size = -1
-let length = 0
-let buf
-let minichunk
+let size = -1;
+let length = 0;
+let buf;
+let minichunk;
 function readStdinData() {
-  process.stdin.on('data', (chunk : Buffer) => {
+  process.stdin.on('data', (chunk: Buffer) => {
     /* this avoids the (probably rare) edge case
      * that we expect to read the 2-byte size field next
      * but we receive only 1 byte */
     if (size <= 0 && chunk.byteLength < 2) {
-      minichunk = chunk
-      return
+      minichunk = chunk;
+      return;
     }
     if (minichunk) {
-      chunk = Buffer.concat([minichunk, chunk])
-      minichunk = undefined
+      chunk = Buffer.concat([minichunk, chunk]);
+      minichunk = undefined;
     }
-    handleChunk(chunk)
+    handleChunk(chunk);
   });
   process.stdin.on('end', () => {
-    channel.close()
-    client.stop()
-  })
+    channel.close();
+    client.stop();
+  });
 }
 
 function handleChunk(chunk: Buffer) {
-  let sourceOffset = 0
+  let sourceOffset = 0;
   if (size <= 0) {
-    size = chunk.readUInt16LE(0)
-    length = 0
-    sourceOffset += 2
-    buf = Buffer.alloc(size)
+    size = chunk.readUInt16LE(0);
+    length = 0;
+    sourceOffset += 2;
+    buf = Buffer.alloc(size);
   }
-  let missing = size - length
-  let toCopy = Math.min(chunk.length, missing)
-  chunk.copy(buf, length, sourceOffset, toCopy)
-  length += toCopy
-  if (length == size) {
-    channel.send(buf)
-    buf = undefined
-    size = -1
-    length = 0
+  const missing = size - length;
+  const toCopy = Math.min(chunk.length, missing);
+  chunk.copy(buf, length, sourceOffset, toCopy);
+  length += toCopy;
+  if (length === size) {
+    channel.send(buf);
+    buf = undefined;
+    size = -1;
+    length = 0;
     if (missing < chunk.length) {
-      let nextChunk = Buffer.alloc(chunk.length - missing)
-      chunk.copy(nextChunk, 0, missing)
+      const nextChunk = Buffer.alloc(chunk.length - missing);
+      chunk.copy(nextChunk, 0, missing);
       if (nextChunk.byteLength >= 2) {
-        handleChunk(nextChunk)
+        handleChunk(nextChunk);
       } else {
-        minichunk = nextChunk
+        minichunk = nextChunk;
       }
     }
   }

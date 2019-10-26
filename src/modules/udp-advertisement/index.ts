@@ -1,1 +1,1 @@
-export * from "./udp-advertisement"
+export * from './udp-advertisement';

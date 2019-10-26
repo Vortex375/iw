@@ -1,1 +1,1 @@
-export * from "./deepstream-client"
+export * from './deepstream-client';
