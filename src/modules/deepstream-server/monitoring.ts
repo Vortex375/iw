@@ -22,7 +22,7 @@ export class IwMonitoring extends DeepstreamPlugin implements DeepstreamMonitori
   }
 
   onLogin(allowed: boolean, endpointType: string): void {
-    log.trace({ allowed, endpointType }, 'login')
+    log.trace({ allowed, endpointType }, 'login');
   }
 
   onMessageRecieved(message: Message): void {
@@ -34,17 +34,17 @@ export class IwMonitoring extends DeepstreamPlugin implements DeepstreamMonitori
           || message.action === RECORD_ACTION.SUBSCRIBECREATEANDREAD
           || message.action === RECORD_ACTION.SUBSCRIBECREATEANDUPDATE) {
 
-        _.forEach(_.compact([message. name, ... message.names || []]), (name) => {
+        _.forEach(_.compact([message.name, ... message.names || []]), (name) => {
           if ( ! name.startsWith(INTROSPECTION_ROOT)) {
-            log.debug('record created', name)
+            log.debug('record created', name);
             this.introspection.registerRecord(name);
           }
         });
       } else if (message.action === RECORD_ACTION.DELETE
           || message.action === RECORD_ACTION.DELETE_BULK) {
-        _.forEach(_.compact([message. name, ... message.names || []]), (name) => {
+        _.forEach(_.compact([message.name, ... message.names || []]), (name) => {
           if ( ! name.startsWith(INTROSPECTION_ROOT)) {
-            log.debug({ name }, 'record deleted')
+            log.debug({ name }, 'record deleted');
             this.introspection.unregisterRecord(name);
           }
         });
@@ -53,7 +53,7 @@ export class IwMonitoring extends DeepstreamPlugin implements DeepstreamMonitori
   }
 
   onMessageSend(message: Message): void {
-    log.trace({ message}, 'message sent');
+    log.trace({ message }, 'message sent');
   }
 
   onBroadcast(message: Message, count: number): void {

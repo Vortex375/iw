@@ -9,11 +9,10 @@ import _ from 'lodash';
 import WebSocket from 'ws';
 import * as process from 'process';
 import { EventEmitter } from 'events';
-
 import * as logging from '../../lib/logging';
 import { Service, State, setIntrospectionRecord } from '../../lib/registry';
-// import { Introspection, NODE_ROOT } from './introspection';
 import { CONNECTION_STATE } from '@deepstream/client/dist/constants';
+import { NODE_ROOT } from '../deepstream-server/introspection';
 
 const deepstream: (url: string, options?: Partial<Options>) => Client = fuckthis as any;
 
@@ -101,13 +100,12 @@ export class DeepstreamClient extends Service {
     this.server = config.server;
     this.introspectionDataProvider = new IntrospectionProvider();
     this.connect(`${config.server}:${config.port}`);
-    // this.provideData(NODE_ROOT + this.clientName, this.introspectionDataProvider);
 
     return Promise.resolve();
   }
 
   stop() {
-    // this.unprovideData(NODE_ROOT + this.clientName, this.introspectionDataProvider);
+    this.unprovideData(NODE_ROOT + this.clientName, this.introspectionDataProvider);
     this.introspectionDataProvider = undefined;
     this.disconnect();
 
@@ -226,24 +224,24 @@ export class DeepstreamClient extends Service {
     // this.introspection.setClient(this.ds);
 
     /* restore subscriptions */
-    for (const [recordName, sub] of this.subscriptions) {
-      /* get record handle */
-      const record = this.ds.record.getRecord(recordName);
-      sub.record = record;
-      for (const [path, callback] of sub.subscriptions) {
-        this.startSubscribe(record, callback, path, false);
-      }
-    }
+    // for (const [recordName, sub] of this.subscriptions) {
+    //   /* get record handle */
+    //   const record = this.ds.record.getRecord(recordName);
+    //   sub.record = record;
+    //   for (const [path, callback] of sub.subscriptions) {
+    //     this.startSubscribe(record, callback, path, false);
+    //   }
+    // }
 
-    /* restore data providers */
-    for (const [pattern, providers] of this.dataProviders) {
-      this.startListen(pattern);
-    }
+    // /* restore data providers */
+    // for (const [pattern, providers] of this.dataProviders) {
+    //   this.startListen(pattern);
+    // }
 
-    /* restore rpc providers */
-    for (const [name, callback] of this.rpcProviders) {
-      this.ds.rpc.provide(name, callback);
-    }
+    // /* restore rpc providers */
+    // for (const [name, callback] of this.rpcProviders) {
+    //   this.ds.rpc.provide(name, callback);
+    // }
 
     /* get port configuration for channels */
     this.getData('server/portConfig').then((portConfig) => {
@@ -264,6 +262,7 @@ export class DeepstreamClient extends Service {
 
     this.setupComplete = true;
     this.emit('connected');
+    this.provideData(NODE_ROOT + this.clientName, this.introspectionDataProvider);
   }
 
   getRecord(name: string, schema?: any): Record {
