@@ -12,7 +12,7 @@ import { EventEmitter } from 'events';
 
 import * as logging from '../../lib/logging';
 import { Service, State, setIntrospectionRecord } from '../../lib/registry';
-import { Introspection, NODE_ROOT } from './introspection';
+// import { Introspection, NODE_ROOT } from './introspection';
 import { CONNECTION_STATE } from '@deepstream/client/dist/constants';
 
 const deepstream: (url: string, options?: Partial<Options>) => Client = fuckthis as any;
@@ -74,7 +74,7 @@ export class DeepstreamClient extends Service {
   private ds: Client | undefined;
   private introspectionDataProvider: IntrospectionProvider | undefined;
 
-  private readonly introspection = new Introspection();
+  // private readonly introspection = new Introspection();
   private readonly dataProviders: Map<string, DataProvider[]> = new Map();
   private readonly rpcProviders: Map<string, RpcCallback> = new Map();
   private readonly subscriptions: Map<string, Subscription> = new Map();
@@ -101,13 +101,13 @@ export class DeepstreamClient extends Service {
     this.server = config.server;
     this.introspectionDataProvider = new IntrospectionProvider();
     this.connect(`${config.server}:${config.port}`);
-    this.provideData(NODE_ROOT + this.clientName, this.introspectionDataProvider);
+    // this.provideData(NODE_ROOT + this.clientName, this.introspectionDataProvider);
 
     return Promise.resolve();
   }
 
   stop() {
-    this.unprovideData(NODE_ROOT + this.clientName, this.introspectionDataProvider);
+    // this.unprovideData(NODE_ROOT + this.clientName, this.introspectionDataProvider);
     this.introspectionDataProvider = undefined;
     this.disconnect();
 
@@ -184,7 +184,7 @@ export class DeepstreamClient extends Service {
       this.ds.on('error', () => {/* squelch errors from old connection */});
       this.ds = undefined;
       setIntrospectionRecord(undefined);
-      this.introspection.setClient(undefined);
+      // this.introspection.setClient(undefined);
       for (const [recordName, sub] of this.subscriptions) {
         /* remove record handles from old connection */
         sub.record = undefined;
@@ -223,7 +223,7 @@ export class DeepstreamClient extends Service {
       return;
     }
 
-    this.introspection.setClient(this.ds);
+    // this.introspection.setClient(this.ds);
 
     /* restore subscriptions */
     for (const [recordName, sub] of this.subscriptions) {
@@ -270,10 +270,10 @@ export class DeepstreamClient extends Service {
     const record = this.ds.record.getRecord(name);
     const deleteFunc = record.delete.bind(record);
     record.delete = () => {
-      this.introspection.unregisterRecord(name);
+      // this.introspection.unregisterRecord(name);
       deleteFunc();
     };
-    this.introspection.registerRecord(name, schema);
+    // this.introspection.registerRecord(name, schema);
     return this.ds.record.getRecord(name);
   }
 
@@ -319,7 +319,7 @@ export class DeepstreamClient extends Service {
       }
     }
 
-    this.introspection.registerRecord(pattern, schema, true);
+    // this.introspection.registerRecord(pattern, schema, true);
 
     this.dataProviders.get(pattern).push(provider);
   }
@@ -357,7 +357,7 @@ export class DeepstreamClient extends Service {
       this.dataProviders.delete(pattern);
     }
 
-    this.introspection.unregisterRecord(pattern);
+    // this.introspection.unregisterRecord(pattern);
   }
 
   openChannel(path: string): Channel {
@@ -370,7 +370,7 @@ export class DeepstreamClient extends Service {
         proxies: []
       };
       this.channelSubscriptions.set(path, sub);
-      this.introspection.registerChannel(path);
+      // this.introspection.registerChannel(path);
     }
     const proxy = new ChannelProxy(sub);
     sub.proxies.push(proxy);
@@ -385,7 +385,7 @@ export class DeepstreamClient extends Service {
       if (sub.proxies.length === 0) {
         log.debug({channel: path}, `no more subscribers for channel ${path}`);
         this.channelSubscriptions.delete(path);
-        this.introspection.unregisterChannel(path);
+        // this.introspection.unregisterChannel(path);
         if (sub.socket) {
           log.debug({channel: path}, `closing channel ${path}`);
           sub.socket.close();
@@ -447,7 +447,7 @@ export class DeepstreamClient extends Service {
   subscribe(recordName: string, callback: (data: any) => void,
             path?: string, now: boolean = true) {
     this.createSubscription(false, recordName, callback, path, now);
-    this.introspection.registerRecord(recordName);
+    // this.introspection.registerRecord(recordName);
   }
 
   subscribeList(recordName: string, callback: (data: any) => void, now: boolean = true) {
@@ -509,7 +509,7 @@ export class DeepstreamClient extends Service {
 
   provideRpc(name: string, callback: RpcCallback, schema?: RpcSchema) {
     this.rpcProviders.set(name, callback);
-    this.introspection.registerRpc(name, schema);
+    // this.introspection.registerRpc(name, schema);
 
     if (this.setupComplete) {
       this.ds.rpc.provide(name, callback);
@@ -518,7 +518,7 @@ export class DeepstreamClient extends Service {
 
   unprovideRpc(name: string) {
     this.rpcProviders.delete(name);
-    this.introspection.unregisterRpc(name);
+    // this.introspection.unregisterRpc(name);
 
     if (this.setupComplete) {
       this.ds.rpc.unprovide(name);

@@ -8,6 +8,7 @@ import _ from 'lodash';
 import { Service, State } from '../../lib/registry';
 import { LOG_ADAPTER_PLUGIN_NAME } from './log-adapter';
 import { ChannelsServer } from './channels-server';
+import { MONITORING_PLUGIN_NAME, IwMonitoring } from './monitoring';
 
 const deepstream: (url: string, options?: Partial<Options>) => Client = fuckthis as any;
 
@@ -21,6 +22,13 @@ const DEEPSTREAM_CONFIG: PartialDeepstreamConfig = {
   logger: {
     type: 'custom',
     name: LOG_ADAPTER_PLUGIN_NAME
+  },
+  monitoring: {
+    type: 'custom',
+    name: MONITORING_PLUGIN_NAME
+  },
+  cache: {
+    name: 'redis'
   },
   connectionEndpoints: [
     {
@@ -119,6 +127,10 @@ export class DeepstreamServer extends Service {
       this.ds.login({
         username: 'server-internal'
       });
+
+      const iwMonitoring: IwMonitoring = this.server.getServices().monitoring as unknown as IwMonitoring;
+      iwMonitoring.setClient(this.ds);
+
       const serverRecord = this.ds.record.getRecord('server/portConfig');
       serverRecord.whenReady(() => {
         serverRecord.set({

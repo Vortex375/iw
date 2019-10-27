@@ -1,7 +1,7 @@
 import { Client } from '@deepstream/client';
 import _ from 'lodash';
 import * as path_ from 'path';
-import { RpcSchema } from './deepstream-client';
+import { RpcSchema } from '../deepstream-client/deepstream-client';
 import * as logging from '../../lib/logging';
 
 export const INTROSPECTION_ROOT = 'iw-introspection/';
