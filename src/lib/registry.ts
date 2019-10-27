@@ -15,25 +15,16 @@ const log = logging.getLogger('Registry');
  */
 export enum State {
   /** the module is ready for operation */
-  OK,
+  OK = 'ok',
   /** the module is actively handling a request */
-  BUSY,
+  BUSY = 'busy',
   /** module was loaded but is currently inactive or unused */
-  INACTIVE,
+  INACTIVE = 'inactive',
   /** a (possibly recoverable) problem was detected, service may be (temporarily) inhibited */
-  PROBLEM,
+  PROBLEM = 'problem',
   /** a fatal error has occured and the module can not continue providing its service */
-  ERROR
+  ERROR = 'error'
 }
-
-/* must match enum indices above */
-export const STATE_NAMES = [
-  'ok',
-  'busy',
-  'inactive',
-  'problem',
-  'error'
-];
 
 /**
  * Base class for Services.
@@ -211,12 +202,12 @@ function updateInstance(instance: Service, updates: any) {
     log[logLevel](
       {
         sub: `${serviceObject.type}${serviceObject.name ? ` (${serviceObject.name})` : ''}`,
-        oldState: STATE_NAMES[serviceObject.state],
-        newState: STATE_NAMES[updates.state]
+        oldState: serviceObject.state,
+        newState: updates.state
       },
       '%s -> %s: %s',
-      STATE_COLORS[serviceObject.state](STATE_NAMES[serviceObject.state]),
-      STATE_COLORS[updates.state](STATE_NAMES[updates.state]),
+      STATE_COLORS[serviceObject.state](serviceObject.state),
+      STATE_COLORS[updates.state](updates.state),
       updates.message || '');
   }
 
