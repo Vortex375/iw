@@ -1,6 +1,6 @@
 /* Deepstream Client */
 
-import fuckthis, { Client } from '@deepstream/client';
+import { DeepstreamClient } from '@deepstream/client';
 import { Options } from '@deepstream/client/dist/client-options';
 import { Record } from '@deepstream/client/dist/record/record';
 import { List } from '@deepstream/client/dist/record/list';
@@ -13,8 +13,6 @@ import * as logging from '../../lib/logging';
 import { Service, State, setIntrospectionRecord } from '../../lib/registry';
 import { CONNECTION_STATE } from '@deepstream/client/dist/constants';
 import { NODE_ROOT } from '../deepstream-server/introspection';
-
-const deepstream: (url: string, options?: Partial<Options>) => Client = fuckthis as any;
 
 const log = logging.getLogger('DeepstreamClient');
 
@@ -68,10 +66,10 @@ export interface DeepstreamClientConfig {
   friendlyName?: string;
 }
 
-export class DeepstreamClient extends Service {
+export class IwDeepstreamClient extends Service {
 
-  private ds: Client | undefined;
-  private introspectionDataProvider: IntrospectionProvider | undefined;
+  private ds: DeepstreamClient | undefined;
+  private readonly introspectionDataProvider: IntrospectionProvider = new IntrospectionProvider();
 
   // private readonly introspection = new Introspection();
   private readonly dataProviders: Map<string, DataProvider[]> = new Map();
@@ -96,9 +94,8 @@ export class DeepstreamClient extends Service {
 
   start(config: DeepstreamClientConfig) {
     this.friendlyName = config.friendlyName || 'unknown';
-    this.clientName = this.friendlyName + '-' + DeepstreamClient.getUid();
+    this.clientName = this.friendlyName + '-' + DeepstreamClient.prototype.getUid();
     this.server = config.server;
-    this.introspectionDataProvider = new IntrospectionProvider();
     this.connect(`${config.server}:${config.port}`);
 
     return Promise.resolve();
@@ -106,7 +103,6 @@ export class DeepstreamClient extends Service {
 
   stop() {
     this.unprovideData(NODE_ROOT + this.clientName, this.introspectionDataProvider);
-    this.introspectionDataProvider = undefined;
     this.disconnect();
 
     return Promise.resolve();
@@ -130,7 +126,7 @@ export class DeepstreamClient extends Service {
 
     /* connect and log in anonymously */
     log.info({ url }, `Connecting to ${url}`);
-    this.ds = deepstream(url, DEEPSTREAM_CONFIG);
+    this.ds = new DeepstreamClient(url, DEEPSTREAM_CONFIG);
 
     this.ds.on('error', (msg: string, event: string, topic: string) => {
       log.error({ event, topic }, `${event}: ${msg}`);
@@ -221,9 +217,7 @@ export class DeepstreamClient extends Service {
       return;
     }
 
-    // this.introspection.setClient(this.ds);
-
-    /* restore subscriptions */
+    // /* restore subscriptions */
     // for (const [recordName, sub] of this.subscriptions) {
     //   /* get record handle */
     //   const record = this.ds.record.getRecord(recordName);
@@ -262,6 +256,7 @@ export class DeepstreamClient extends Service {
 
     this.setupComplete = true;
     this.emit('connected');
+
     this.provideData(NODE_ROOT + this.clientName, this.introspectionDataProvider);
   }
 

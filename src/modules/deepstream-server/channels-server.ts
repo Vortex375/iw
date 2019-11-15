@@ -4,37 +4,50 @@ import WebSocket = require('ws');
 import http = require('http');
 import url = require('url');
 import _ from 'lodash';
+import { DeepstreamPlugin, DeepstreamServices } from '@deepstream/types';
+import { registerPlugin } from '@deepstream/server/dist/src/config/config-initialiser';
+import { IwMonitoring } from './monitoring';
 
 const log = logging.getLogger('Channels');
 
-const SERVICE_TYPE = 'channels-server';
+export const CHANNELS_SERVER_PLUGIN_NAME = 'channels-server';
 
 export interface ChannelsServerConfig {
   port: number;
 }
 
-export class ChannelsServer extends Service {
+export class ChannelsServer extends Service implements DeepstreamPlugin {
+  readonly description = 'IW Channels Server';
+
   private wss: WebSocket.Server;
   private channels: Map<string, WebSocket[]> = new Map();
 
-  constructor() {
-    super(SERVICE_TYPE);
+  constructor(private config: ChannelsServerConfig, private services: DeepstreamServices) {
+    super(CHANNELS_SERVER_PLUGIN_NAME);
   }
 
-  start(config: ChannelsServerConfig) {
+  whenReady() {
+    return this.start();
+  }
+
+  close() {
+    return this.stop();
+  }
+
+  start() {
     if (this.wss) {
       this.stop();
     }
 
-    this.wss = new WebSocket.Server({port: config.port});
-    this.setState(State.BUSY);
+    this.wss = new WebSocket.Server({port: this.config.port});
+    this.setState(State.BUSY, 'starting up ...');
 
     this.wss.on('error', (e) => {
       this.setState(State.ERROR, 'wss error');
       this.setErrorDiagnostic(e);
     });
     this.wss.on('listening', () => {
-      this.setState(State.OK, `Channels server listening on :${config.port}`);
+      this.setState(State.OK, `Channels server listening on :${this.config.port}`);
     });
     this.wss.on('connection', (ws: WebSocket, req?: http.IncomingMessage) => {
       /* compatibiliy with ws < 3 */
@@ -56,6 +69,9 @@ export class ChannelsServer extends Service {
   }
 
   private addClient(ws: WebSocket, path: string) {
+    const introspection = (this.services.monitoring as IwMonitoring).introspection;
+    introspection.registerChannel(path);
+
     log.debug({channel: path}, 'adding client');
     if ( ! this.channels.has(path)) {
       this.channels.set(path, []);
@@ -68,6 +84,7 @@ export class ChannelsServer extends Service {
       log.debug({ code, channel: path }, 'client disconnected: %s', reason);
       _.pull(this.channels.get(path), ws);
       ws.removeAllListeners();
+      introspection.unregisterChannel(path);
     });
     ws.on('message', (data) => {
       /* broadcast to all other sockets on the same channel */
@@ -79,3 +96,5 @@ export class ChannelsServer extends Service {
     });
   }
 }
+
+registerPlugin(CHANNELS_SERVER_PLUGIN_NAME, ChannelsServer);

@@ -1,4 +1,4 @@
-import { Client } from '@deepstream/client';
+import { DeepstreamClient } from '@deepstream/client';
 import _ from 'lodash';
 import * as path_ from 'path';
 import { RpcSchema } from '../deepstream-client/deepstream-client';
@@ -17,9 +17,9 @@ export class Introspection {
 
   private readonly records: Map<string, any> = new Map();
   private readonly deletedPaths: Set<string> = new Set();
-  private client: Client;
+  private client: DeepstreamClient;
 
-  setClient(client: Client) {
+  setClient(client: DeepstreamClient) {
     this.client = client;
     if (client !== undefined) {
       this.restore();

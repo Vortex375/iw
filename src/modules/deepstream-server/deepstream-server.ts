@@ -1,51 +1,64 @@
 /* Deepstream Server */
 
 import { Deepstream } from '@deepstream/server';
-import fuckthis, { Client } from '@deepstream/client';
-import { PartialDeepstreamConfig } from '@deepstream/types';
-import { Options } from '@deepstream/client/dist/client-options';
+import { DeepstreamClient } from '@deepstream/client';
 import _ from 'lodash';
-import { Service, State } from '../../lib/registry';
+import { Service, State, setIntrospectionRecord } from '../../lib/registry';
 import { LOG_ADAPTER_PLUGIN_NAME } from './log-adapter';
-import { ChannelsServer } from './channels-server';
+import { CHANNELS_SERVER_PLUGIN_NAME } from './channels-server';
 import { MONITORING_PLUGIN_NAME, IwMonitoring } from './monitoring';
-
-const deepstream: (url: string, options?: Partial<Options>) => Client = fuckthis as any;
+import { PartialDeepstreamConfig } from '@deepstream/types';
+import { NODE_ROOT } from './introspection';
 
 const SERVICE_TYPE = 'deepstream-server';
 export const DEFAULT_DEEPSTREAM_PORT = 6020;
-export const DEFAULT_HTTP_PORT = 6080;
+export const DEFAULT_WS_PATH = '/deepstream';
+export const DEFAULT_HTTP_PATH = '/http';
 export const DEFAULT_CHANNELS_PORT = 6081;
 
 const DEEPSTREAM_CONFIG: PartialDeepstreamConfig = {
   showLogo: false,
   logger: {
-    type: 'custom',
     name: LOG_ADAPTER_PLUGIN_NAME
   },
   monitoring: {
-    type: 'custom',
     name: MONITORING_PLUGIN_NAME
   },
   cache: {
     name: 'redis'
   },
+  httpServer: {
+    type: 'uws',
+    options: {
+      healthCheckPath: '/health-check',
+      port: DEFAULT_DEEPSTREAM_PORT,
+      allowAllOrigins: true
+    }
+  },
   connectionEndpoints: [
     {
-      name: 'ws',
-      type: 'uws-websocket',
+      type: 'ws-binary',
       options: {
-        port: DEFAULT_DEEPSTREAM_PORT
+        // urlPath: DEFAULT_WS_PATH
       }
     },
     {
-      name: 'http',
-      type: 'node-http',
+      type: 'http',
       options: {
-        port: DEFAULT_HTTP_PORT
+        authPath: DEFAULT_HTTP_PATH + '-auth',
+        getPath: DEFAULT_HTTP_PATH,
+        postPath: DEFAULT_HTTP_PATH
       }
     }
   ],
+  plugins: {
+    channelsServer: {
+      name: CHANNELS_SERVER_PLUGIN_NAME,
+      options: {
+        port: DEFAULT_CHANNELS_PORT
+      }
+    }
+  },
   /* set less aggressive timeout values
    * to allow running on weak IoT hardware */
   rpc: {
@@ -59,23 +72,19 @@ const DEEPSTREAM_CONFIG: PartialDeepstreamConfig = {
   listen: {
     responseTimeout: 5000
   },
-  dependencyInitialisationTimeout: 20000
+  dependencyInitializationTimeout: 20000
 };
 
 export interface DeepstreamServerConfig {
   port?: number;
-  httpPort?: number;
   channelsPort?: number;
   persist?: boolean | [string];
-  plugins?: any;
 }
 
 export class DeepstreamServer extends Service {
 
   private server: Deepstream;
-  private ds: Client;
-  private channels: ChannelsServer;
-  private port: number;
+  private ds: DeepstreamClient;
 
   constructor() {
     super(SERVICE_TYPE);
@@ -86,13 +95,11 @@ export class DeepstreamServer extends Service {
     /* build configuration for the deepstream server*/
     const deepstreamConfig: PartialDeepstreamConfig = _.assign({}, DEEPSTREAM_CONFIG);
     if (config.port !== undefined) {
-      deepstreamConfig.connectionEndpoints[0].options.port = config.port;
+      deepstreamConfig.httpServer.options.port = config.port;
     }
-    if (config.httpPort !== undefined) {
-      deepstreamConfig.connectionEndpoints[1].options.port = config.port;
+    if (config.channelsPort !== undefined) {
+      deepstreamConfig.plugins.channelsServer.options.port = config.channelsPort;
     }
-
-    deepstreamConfig.plugins = config.plugins;
 
     // if (config.persist === undefined || config.persist === false) {
     //   /* exclude everything from storage */
@@ -119,25 +126,25 @@ export class DeepstreamServer extends Service {
 
     this.server.start();
 
-    this.channels = new ChannelsServer();
-    this.channels.start({port: config.channelsPort || DEFAULT_CHANNELS_PORT});
-
-    this.server.on('started', () => {
-      this.ds = deepstream(`localhost:${config.port}`);
-      this.ds.login({
-        username: 'server-internal'
+    this.server.on('started', async () => {
+      this.ds = new DeepstreamClient(`localhost:${config.port}`);
+      await this.ds.login({
+        username: 'server'
       });
 
       const iwMonitoring: IwMonitoring = this.server.getServices().monitoring as unknown as IwMonitoring;
       iwMonitoring.setClient(this.ds);
 
-      const serverRecord = this.ds.record.getRecord('server/portConfig');
-      serverRecord.whenReady(() => {
-        serverRecord.set({
+      const portConfigRecord = this.ds.record.getRecord('server/portConfig');
+      portConfigRecord.whenReady(() => {
+        portConfigRecord.set({
           port: config.port || DEFAULT_DEEPSTREAM_PORT,
-          httpPort: config.httpPort || DEFAULT_HTTP_PORT,
           channelsPort: config.channelsPort || DEFAULT_CHANNELS_PORT
         });
+      });
+      const introspectionRecord = this.ds.record.getRecord(NODE_ROOT + 'server');
+      introspectionRecord.whenReady(() => {
+        setIntrospectionRecord(introspectionRecord);
       });
     });
 
@@ -150,7 +157,6 @@ export class DeepstreamServer extends Service {
       this.ds = undefined;
     }
     this.server.stop();
-    this.channels.stop();
 
     return Promise.resolve();
   }

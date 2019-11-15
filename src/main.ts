@@ -17,15 +17,15 @@
 */
 
 import { DeepstreamServer } from './modules/deepstream-server';
-import { DeepstreamClient } from './modules/deepstream-client';
+import { IwDeepstreamClient } from './modules/deepstream-client';
 import { UdpDiscovery } from './modules/udp-discovery';
 import { UdpAdvertisement } from './modules/udp-advertisement';
 import minimist from 'minimist';
 
-import fuckthis, { Client } from '@deepstream/client';
+import fuckthis, { DeepstreamClient } from '@deepstream/client';
 import { Options } from '@deepstream/client/dist/client-options';
 import { Record } from '@deepstream/client/dist/record/record';
-const deepstream: (url: string, options?: Partial<Options>) => Client = fuckthis as any;
+const deepstream: (url: string, options?: Partial<Options>) => DeepstreamClient = fuckthis as any;
 
 const argv = minimist(process.argv.slice(2));
 
@@ -35,22 +35,7 @@ if (argv.server) {
   const server = new DeepstreamServer();
   server.start({
     port: 6020,
-    persist: ['light-control'],
-    plugins: {
-      // storage: {
-      //   name: "mongodb",
-      //   options: {
-      //     connectionString: "mongodb://localhost:27017/iw-deepstream"
-      //   }
-      // }
-      // cache: {
-      //   name: "redis",
-      //   options: {
-      //     host: "localhost",
-      //     port: 6379
-      //   }
-      // }
-    }
+    persist: ['light-control']
   });
 
   const advertisement = new UdpAdvertisement();
@@ -60,7 +45,7 @@ if (argv.server) {
 //  mongodb.connect("mongodb://localhost:27017/iw-db")
 
 } else if (argv.client) {
-  const client = new DeepstreamClient();
+  const client = new IwDeepstreamClient();
   const discovery = new UdpDiscovery(client);
 
   discovery.start({ requestPort: 6031 });

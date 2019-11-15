@@ -1,19 +1,24 @@
 import { registerPlugin } from '@deepstream/server/dist/src/config/config-initialiser';
 import * as logging from '../../lib/logging';
-import { DeepstreamMonitoring, DeepstreamPlugin, LOG_LEVEL, EVENT, MetaData, MonitoringPlugin } from '@deepstream/types';
-import { Message, TOPIC, RECORD_ACTION } from '@deepstream/client/dist/constants';
-import { Client } from '@deepstream/client';
+import { DeepstreamClient } from '@deepstream/client';
 import { Introspection, INTROSPECTION_ROOT } from './introspection';
 import _ from 'lodash';
+import { DeepstreamPlugin, DeepstreamMonitoring, LOG_LEVEL, MetaData, MonitoringPlugin, EVENT } from '@deepstream/types';
+import { Message } from '@deepstream/protobuf/dist/types/messages';
+import { TOPIC, RECORD_ACTION } from '@deepstream/protobuf/dist/types/all';
 
 const log = logging.getLogger('Deepstream', 'Monitoring');
 
 export class IwMonitoring extends DeepstreamPlugin implements DeepstreamMonitoring {
   readonly description = 'Iw Monitoring for logging and introspection';
 
-  private readonly introspection = new Introspection();
+  readonly introspection = new Introspection();
 
-  setClient(client: Client) {
+  constructor() {
+    super();
+  }
+
+  setClient(client: DeepstreamClient) {
     this.introspection.setClient(client);
   }
 
@@ -25,7 +30,7 @@ export class IwMonitoring extends DeepstreamPlugin implements DeepstreamMonitori
     log.trace({ allowed, endpointType }, 'login');
   }
 
-  onMessageRecieved(message: Message): void {
+  onMessageReceived(message: Message): void {
     log.trace({ message }, 'message received');
     if (message.topic === TOPIC.RECORD) {
       if (message.action === RECORD_ACTION.CREATE

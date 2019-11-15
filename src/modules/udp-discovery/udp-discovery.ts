@@ -2,7 +2,7 @@
 
 import * as logging from '../../lib/logging';
 import { Service, State } from '../../lib/registry';
-import { DeepstreamClient, DeepstreamClientConfig } from '../deepstream-client';
+import { IwDeepstreamClient, DeepstreamClientConfig } from '../deepstream-client';
 
 import * as _ from 'lodash';
 import dgram = require('dgram');
@@ -18,18 +18,22 @@ const ADVERTISEMENT_MESSAGE = 'iw-advertisement';
 
 export interface UdpDiscoveryConfig {
   /** The port where to send discovery requests.
-   * @default 6030 */
+   * @default 6030
+   */
   requestPort?: number;
   /** The address where to send discovery requests.
-   * @default "255.255.255.255" */
+   * @default "255.255.255.255"
+   */
   requestAddress?: string;
   /** The port where to listen for advertisement broadcasts.
-   * @default requestPort + 1 */
+   * @default requestPort + 1
+   */
   broadcastPort?: number;
   broadcastAddress?: string;
   /** Configuration used when automatically starting the deepstream client.
    * Only relevant when passing a client to the constructor.
-   * @default {} */
+   * @default {}
+   */
   clientConfig?: any;
 }
 
@@ -43,7 +47,7 @@ export class UdpDiscovery extends Service {
 
   private clientConfig: DeepstreamClientConfig;
 
-  constructor(private client?: DeepstreamClient) {
+  constructor(private client?: IwDeepstreamClient) {
     super('udp-discovery');
 
     if (this.client) {

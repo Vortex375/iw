@@ -7,6 +7,7 @@ import _ from 'lodash';
 import colors = require('colors/safe');
 import { EventEmitter } from 'events';
 import { Record } from '@deepstream/client/dist/record/record';
+import os = require('os');
 
 const log = logging.getLogger('Registry');
 
@@ -79,6 +80,9 @@ export function setIntrospectionRecord(record: Record | undefined) {
   introspectionRecord = record;
   if (record !== undefined) {
     const content = {
+      hostname: os.hostname(),
+      platform: os.platform(),
+      addresses: _.map(_.filter(_.flatten(_.values(os.networkInterfaces())), (iface) => ! iface.internal), (iface) => iface.address),
       services: _.map(Array.from(INSTANCES.values()), (s) => _.omit(s, 'instance'))
     };
     record.set(content);

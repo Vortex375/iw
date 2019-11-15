@@ -16,7 +16,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { DeepstreamClient } from './modules/deepstream-client';
+import { IwDeepstreamClient } from './modules/deepstream-client';
 import { UdpDiscovery } from './modules/udp-discovery';
 
 /* this "startup script" is for testing only */
@@ -24,7 +24,7 @@ import { UdpDiscovery } from './modules/udp-discovery';
 const RECORD_PATH  = 'light-control/zone/0';
 const CHANNEL_PATH = 'light-control/zone/0';
 
-const client = new DeepstreamClient();
+const client = new IwDeepstreamClient();
 const discovery = new UdpDiscovery(client);
 
 discovery.start({

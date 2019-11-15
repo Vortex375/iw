@@ -7,7 +7,7 @@
 
 import * as logging from '../../lib/logging';
 import { Service } from '../../lib/registry';
-import { DeepstreamClient } from '../deepstream-client';
+import { IwDeepstreamClient } from '../deepstream-client';
 
 import * as _ from 'lodash';
 
@@ -40,7 +40,7 @@ export interface StaticModuleConfiguration {
 
 export class StaticConfigProvider extends Service {
 
-   constructor(private readonly ds: DeepstreamClient) {
+   constructor(private readonly ds: IwDeepstreamClient) {
      super(SERVICE_TYPE);
    }
 
