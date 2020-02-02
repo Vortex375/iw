@@ -37,7 +37,7 @@ export abstract class Service extends EventEmitter {
     registerInstance(type, initialState, name, this);
   }
 
-  abstract start(config: any): Promise<void>;
+  abstract start(config?: any): Promise<void>;
 
   abstract stop(): Promise<void>;
 

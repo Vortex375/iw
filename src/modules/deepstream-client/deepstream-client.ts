@@ -92,13 +92,11 @@ export class IwDeepstreamClient extends Service {
     // process.on("beforeExit", () => this.disconnect())
   }
 
-  start(config: DeepstreamClientConfig) {
+  async start(config: DeepstreamClientConfig) {
     this.friendlyName = config.friendlyName || 'unknown';
     this.clientName = this.friendlyName + '-' + DeepstreamClient.prototype.getUid();
     this.server = config.server;
-    this.connect(`${config.server}:${config.port}`);
-
-    return Promise.resolve();
+    await this.connect(`${config.server}:${config.port}`);
   }
 
   stop() {
@@ -114,7 +112,7 @@ export class IwDeepstreamClient extends Service {
     return Promise.resolve(true);
   }
 
-  private connect(url: string) {
+  private async connect(url: string) {
     this.stopReconnect();
 
     /* close active connection */
@@ -161,7 +159,7 @@ export class IwDeepstreamClient extends Service {
       }
     });
 
-    this.ds.login({
+    await this.ds.login({
       username: this.clientName
     });
   }
@@ -517,6 +515,18 @@ export class IwDeepstreamClient extends Service {
     if (this.setupComplete) {
       this.ds.rpc.unprovide(name);
     }
+  }
+
+  subscribeEvent(event: string, callback: (data?: any) => void) {
+    this.ds.event.subscribe(event, callback);
+  }
+
+  unsubscribeEvent(event: string, callback: (data?: any) => void) {
+    this.ds.event.unsubscribe(event, callback);
+  }
+
+  emitEvent(event: string, data?: any) {
+    this.ds.event.emit(event, data);
   }
 
   getClientName(): string {
