@@ -18,28 +18,30 @@
     "copy-static-assets": "node copyStaticAssets.js"
   },
   "dependencies": {
-    "@deepstream/cache-redis": "^2.0.5",
-    "@deepstream/client": "^5.0.4",
-    "@deepstream/server": "^5.0.4",
-    "@deepstream/types": "^2.0.7",
+    "@deepstream/cache-redis": "^2.0.8",
+    "@deepstream/client": "^5.0.8",
+    "@deepstream/server": "^5.0.14",
+    "@deepstream/types": "^2.0.9",
     "bunyan": "^1.8.12",
     "colors": "^1.4.0",
     "escape-string-regexp": "^2.0.0",
     "lodash": "^4.17.15",
     "minimist": "^1.2.0",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v16.1.0",
-    "ws": "^7.2.0"
+    "ws": "^7.2.1"
   },
   "devDependencies": {
     "@types/bunyan": "1.8.6",
-    "@types/lodash": "^4.14.137",
+    "@types/lodash": "^4.14.149",
     "@types/minimist": "^1.2.0",
-    "@types/node": "^12.7.2",
-    "@types/ws": "^6.0.3",
-    "concurrently": "^4.1.2",
-    "ts-essentials": "^3.0.2",
-    "tslint": "^5.20.0",
-    "typescript": "^3.6.4"
+    "@types/node": "^13.13.2",
+    "@types/ws": "^7.2.1",
+    "concurrently": "^5.1.0",
+    "ts-essentials": "^6.0.0",
+    "tslint": "^6.0.0",
+    "typescript": "~3.8.3"
   },
-  "optionalDependencies": {}
+  "publishConfig": {
+    "directory": "dist"
+  }
 }
