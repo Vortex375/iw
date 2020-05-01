@@ -9,13 +9,11 @@
     "url": "https://github.com/Vortex375/iw.git"
   },
   "scripts": {
-    "start": "npm run build && npm run watch",
-    "build": "npm run build-ts && npm run tslint && npm run copy-static-assets",
+    "build": "rimraf dist && npm run build-ts",
     "watch": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch-ts\"",
     "build-ts": "tsc",
     "watch-ts": "tsc -w",
-    "tslint": "tslint -c tslint.json -p tsconfig.json",
-    "copy-static-assets": "node copyStaticAssets.js"
+    "tslint": "tslint -c tslint.json -p tsconfig.json"
   },
   "dependencies": {
     "@deepstream/cache-redis": "^2.0.9",
@@ -37,6 +35,7 @@
     "@types/node": "^13.13.2",
     "@types/ws": "^7.2.1",
     "concurrently": "^5.1.0",
+    "rimraf": "^3.0.2",
     "ts-essentials": "^6.0.0",
     "tslint": "^6.0.0",
     "typescript": "~3.8.3"
