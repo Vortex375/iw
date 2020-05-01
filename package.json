@@ -18,10 +18,10 @@
     "copy-static-assets": "node copyStaticAssets.js"
   },
   "dependencies": {
-    "@deepstream/cache-redis": "^2.0.8",
+    "@deepstream/cache-redis": "^2.0.9",
     "@deepstream/client": "^5.0.8",
-    "@deepstream/server": "^5.0.14",
-    "@deepstream/types": "^2.0.9",
+    "@deepstream/server": "^5.0.16",
+    "@deepstream/types": "^2.1.0",
     "bunyan": "^1.8.12",
     "colors": "^1.4.0",
     "escape-string-regexp": "^2.0.0",
