@@ -9,11 +9,13 @@ import { CHANNELS_SERVER_PLUGIN_NAME } from './channels-server';
 import { MONITORING_PLUGIN_NAME, IwMonitoring } from './monitoring';
 import { PartialDeepstreamConfig } from '@deepstream/types';
 import { NODE_ROOT } from './introspection';
+import { INTROSPECTION_WEB_APP_PLUGIN_NAME } from './introspection-app';
 
 const SERVICE_TYPE = 'deepstream-server';
 export const DEFAULT_DEEPSTREAM_PORT = 6020;
 export const DEFAULT_WS_PATH = '/deepstream';
 export const DEFAULT_HTTP_PATH = '/http';
+export const DEFAULT_HTTP_PORT = 6080;
 export const DEFAULT_CHANNELS_PORT = 6081;
 
 const DEEPSTREAM_CONFIG: PartialDeepstreamConfig = {
@@ -28,7 +30,7 @@ const DEEPSTREAM_CONFIG: PartialDeepstreamConfig = {
     name: 'redis'
   },
   httpServer: {
-    type: 'uws',
+    type: 'default',
     options: {
       healthCheckPath: '/health-check',
       port: DEFAULT_DEEPSTREAM_PORT,
@@ -56,6 +58,12 @@ const DEEPSTREAM_CONFIG: PartialDeepstreamConfig = {
       name: CHANNELS_SERVER_PLUGIN_NAME,
       options: {
         port: DEFAULT_CHANNELS_PORT
+      }
+    },
+    introspectionWebApp: {
+      name: INTROSPECTION_WEB_APP_PLUGIN_NAME,
+      options: {
+        port: DEFAULT_HTTP_PORT
       }
     }
   },
