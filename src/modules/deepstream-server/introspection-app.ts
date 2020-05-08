@@ -39,7 +39,7 @@ export class IntrospectionWebApp extends Service implements DeepstreamPlugin {
       app.use(express.static(appRoot));
       this.server = app.listen(this.config.port, err => err ? reject(err) : resolve());
     });
-    this.setState(State.OK);
+    this.setState(State.OK, `introspection web app listening on :${this.config.port}`);
   }
 
   async stop() {
