@@ -49,6 +49,14 @@ export abstract class Service extends EventEmitter {
     deregisterInstance(this);
   }
 
+  setServiceName(name: string) {
+    const updates = {
+      name
+    };
+
+    updateInstance(this, updates);
+  }
+
   setState(state: State, message?: string) {
     const updates = {
       state,
