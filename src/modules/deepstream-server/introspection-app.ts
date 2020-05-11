@@ -1,27 +1,27 @@
 import { Service, State } from '../../lib/registry';
-import { DeepstreamPlugin, DeepstreamServices, DeepstreamHTTPMeta, DeepstreamHTTPResponse } from '@deepstream/types';
+import { DeepstreamPlugin, DeepstreamServices } from '@deepstream/types';
 import * as logging from '../../lib/logging';
 import { registerPlugin } from '@deepstream/server/dist/src/config/config-initialiser';
 import express from 'express';
 import { Server } from 'http';
+import _ from 'lodash';
 
+const log = logging.getLogger('WebServer');
 
-const appRoot = 'node_modules/iw-introspection';
-const log = logging.getLogger('IntrospectionWebApp');
+export const WEB_SERVER_PLUGIN_NAME = 'web-server';
 
-export const INTROSPECTION_WEB_APP_PLUGIN_NAME = 'introspection-web-app';
-
-export interface IntrospectionWebAppConfig {
+export interface WebServerConfig {
   port: number;
+  apps: { [path: string]: string | express.Router };
 }
 
-export class IntrospectionWebApp extends Service implements DeepstreamPlugin {
-  readonly description = 'IW Introspection Web App';
+export class WebServer extends Service implements DeepstreamPlugin {
+  readonly description = 'IW Web Apps';
 
   private server: Server;
 
-  constructor(private config: IntrospectionWebAppConfig, private services: DeepstreamServices) {
-    super(INTROSPECTION_WEB_APP_PLUGIN_NAME);
+  constructor(private config: WebServerConfig, private services: DeepstreamServices) {
+    super(WEB_SERVER_PLUGIN_NAME);
   }
 
   whenReady() {
@@ -36,10 +36,19 @@ export class IntrospectionWebApp extends Service implements DeepstreamPlugin {
     await new Promise<void>((resolve, reject) => {
       this.setState(State.BUSY);
       const app = express();
-      app.use(express.static(appRoot));
+
+      _.forEach(this.config.apps, (webApp, path) => {
+        if (typeof webApp === 'string') {
+          app.use(path, express.static(webApp));
+        } else {
+          app.use(path, webApp);
+        }
+      });
+      app.use('/', this.welcomePage.bind(this));
+
       this.server = app.listen(this.config.port, err => err ? reject(err) : resolve());
     });
-    this.setState(State.OK, `introspection web app listening on :${this.config.port}`);
+    this.setState(State.OK, `web app server listening on :${this.config.port}`);
   }
 
   async stop() {
@@ -48,6 +57,21 @@ export class IntrospectionWebApp extends Service implements DeepstreamPlugin {
     });
     this.setState(State.INACTIVE);
   }
+
+  private welcomePage(req: express.Request, res: express.Response) {
+    const webAppLinks = _.map(this.config.apps, (webApp, path) => `<li><a href="${path}">${path}</a></li>`);
+    res.header('Content-Type', 'text/html');
+    res.send(`
+      <html>
+        <head>
+          <title>IW Web Apps</title>
+        </head>
+        <body>
+          <ul>${webAppLinks}</ul>
+        </body>
+      </html>
+    `);
+  }
 }
 
-registerPlugin(INTROSPECTION_WEB_APP_PLUGIN_NAME, IntrospectionWebApp);
+registerPlugin(WEB_SERVER_PLUGIN_NAME, WebServer);
