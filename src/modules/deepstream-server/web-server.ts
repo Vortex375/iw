@@ -37,7 +37,7 @@ export class WebServer extends Service implements DeepstreamPlugin {
       this.setState(State.BUSY);
       const app = express();
 
-      app.use('/', this.welcomePage.bind(this));
+      app.use('/index.html', this.welcomePage.bind(this));
 
       _.forEach(this.config.apps, (webApp, path) => {
         if (typeof webApp === 'string') {
