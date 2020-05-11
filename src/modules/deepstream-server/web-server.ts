@@ -45,7 +45,7 @@ export class WebServer extends Service implements DeepstreamPlugin {
           app.use(path, webApp);
         }
       });
-      app.use('/', this.welcomePage.bind(this));
+      // app.use('/', this.welcomePage.bind(this));
 
       this.server = app.listen(this.config.port, err => err ? reject(err) : resolve());
     });
