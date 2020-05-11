@@ -37,6 +37,8 @@ export class WebServer extends Service implements DeepstreamPlugin {
       this.setState(State.BUSY);
       const app = express();
 
+      app.use('/', this.welcomePage.bind(this));
+
       _.forEach(this.config.apps, (webApp, path) => {
         if (typeof webApp === 'string') {
           app.use(path, express.static(webApp));
@@ -44,7 +46,6 @@ export class WebServer extends Service implements DeepstreamPlugin {
           app.use(path, webApp);
         }
       });
-      app.use('/', this.welcomePage.bind(this));
 
       this.server = app.listen(this.config.port, err => err ? reject(err) : resolve());
     });

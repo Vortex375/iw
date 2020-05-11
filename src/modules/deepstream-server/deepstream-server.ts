@@ -9,7 +9,7 @@ import { CHANNELS_SERVER_PLUGIN_NAME } from './channels-server';
 import { MONITORING_PLUGIN_NAME, IwMonitoring } from './monitoring';
 import { PartialDeepstreamConfig } from '@deepstream/types';
 import { NODE_ROOT } from './introspection';
-import { WEB_SERVER_PLUGIN_NAME } from './introspection-app';
+import { WEB_SERVER_PLUGIN_NAME } from './web-server';
 
 const SERVICE_TYPE = 'deepstream-server';
 export const DEFAULT_DEEPSTREAM_PORT = 6020;
