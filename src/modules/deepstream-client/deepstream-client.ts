@@ -473,6 +473,7 @@ export class IwDeepstreamClient extends Service {
     } else {
       (record as Record).subscribe(undefined, callback, now);
     }
+    log.debug({path, now}, `subscribed to ${record.name}`);
   }
 
   unsubscribe(recordName: string, callback: (data: any) => void) {
