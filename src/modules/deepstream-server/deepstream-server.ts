@@ -65,7 +65,7 @@ const DEEPSTREAM_CONFIG: PartialDeepstreamConfig = {
       options: {
         port: DEFAULT_HTTP_PORT,
         apps: {
-          '/introspection': 'node_modules/iw-introspection'
+          '/': 'node_modules/iw-introspection'
         }
       }
     }
