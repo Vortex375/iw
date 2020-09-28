@@ -23,8 +23,7 @@ import { UdpAdvertisement } from './modules/udp-advertisement';
 import minimist from 'minimist';
 
 import fuckthis, { DeepstreamClient } from '@deepstream/client';
-import { Options } from '@deepstream/client/dist/client-options';
-import { Record } from '@deepstream/client/dist/record/record';
+import { Options } from '@deepstream/client/dist/src/client-options';
 const deepstream: (url: string, options?: Partial<Options>) => DeepstreamClient = fuckthis as any;
 
 const argv = minimist(process.argv.slice(2));

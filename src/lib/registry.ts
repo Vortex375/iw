@@ -6,7 +6,7 @@ import * as logging from './logging';
 import _ from 'lodash';
 import colors = require('colors/safe');
 import { EventEmitter } from 'events';
-import { Record } from '@deepstream/client/dist/record/record';
+import { Record } from '@deepstream/client/dist/src/record/record';
 import os = require('os');
 
 const log = logging.getLogger('Registry');

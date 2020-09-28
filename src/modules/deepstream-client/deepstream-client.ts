@@ -1,17 +1,17 @@
 /* Deepstream Client */
 
 import { DeepstreamClient } from '@deepstream/client';
-import { Options } from '@deepstream/client/dist/client-options';
-import { Record } from '@deepstream/client/dist/record/record';
-import { List } from '@deepstream/client/dist/record/list';
-import { RPCResponse } from '@deepstream/client/dist/rpc/rpc-response';
+import { Options } from '@deepstream/client/dist/src/client-options';
+import { Record } from '@deepstream/client/dist/src/record/record';
+import { List } from '@deepstream/client/dist/src/record/list';
+import { RPCResponse } from '@deepstream/client/dist/src/rpc/rpc-response';
 import _ from 'lodash';
 import WebSocket from 'ws';
 import * as process from 'process';
 import { EventEmitter } from 'events';
 import * as logging from '../../lib/logging';
 import { Service, State, setIntrospectionRecord } from '../../lib/registry';
-import { CONNECTION_STATE } from '@deepstream/client/dist/constants';
+import { CONNECTION_STATE } from '@deepstream/client/dist/src/constants';
 import { NODE_ROOT } from '../deepstream-server/introspection';
 
 const log = logging.getLogger('DeepstreamClient');
