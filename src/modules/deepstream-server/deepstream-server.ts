@@ -10,6 +10,7 @@ import { MONITORING_PLUGIN_NAME, IwMonitoring } from './monitoring';
 import { PartialDeepstreamConfig } from '@deepstream/types';
 import { NODE_ROOT } from './introspection';
 import { WEB_SERVER_PLUGIN_NAME } from './web-server';
+import { Component } from 'iw-ioc';
 
 const SERVICE_TYPE = 'deepstream-server';
 export const DEFAULT_DEEPSTREAM_PORT = 6020;
@@ -74,7 +75,7 @@ const DEEPSTREAM_CONFIG: PartialDeepstreamConfig = {
    * to allow running on weak IoT hardware */
   rpc: {
     ackTimeout: 5000,
-    responseTimeout: 60000,
+    responseTimeout: 60000
   },
   record: {
     cacheRetrievalTimeout: 5000,
@@ -92,6 +93,7 @@ export interface DeepstreamServerConfig {
   persist?: boolean | [string];
 }
 
+@Component(SERVICE_TYPE)
 export class DeepstreamServer extends Service {
 
   private server: Deepstream;

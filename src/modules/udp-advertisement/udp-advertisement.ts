@@ -6,6 +6,7 @@ import { DEFAULT_DEEPSTREAM_PORT } from '../deepstream-server';
 import { DEFAULT_REQUEST_PORT } from '../udp-discovery';
 
 import dgram = require('dgram');
+import { Component } from 'iw-ioc';
 
 const log = logging.getLogger('UdpAdvertisement');
 
@@ -36,6 +37,7 @@ export interface UdpAdvertisementConfig {
   broadcastAddress?: string;
 }
 
+@Component('udp-advertisement')
 export class UdpAdvertisement extends Service {
 
   private socket: dgram.Socket;

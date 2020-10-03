@@ -1,6 +1,6 @@
 /*
   iw - Intelligent Wiring for Home Automation and other uses.
-  Copyright (C) 2017 Benjamin Schmitz
+  Copyright (C) 2017-2020 Benjamin Schmitz
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -16,49 +16,22 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { DeepstreamServer } from './modules/deepstream-server';
-import { IwDeepstreamClient } from './modules/deepstream-client';
-import { UdpDiscovery } from './modules/udp-discovery';
-import { UdpAdvertisement } from './modules/udp-advertisement';
 import minimist from 'minimist';
-
-import fuckthis, { DeepstreamClient } from '@deepstream/client';
-import { Options } from '@deepstream/client/dist/src/client-options';
-const deepstream: (url: string, options?: Partial<Options>) => DeepstreamClient = fuckthis as any;
+import { IOC } from 'iw-ioc';
+import { IwApplication } from './modules/application';
+import { readFileSync } from 'fs';
 
 const argv = minimist(process.argv.slice(2));
 
-/* this "startup script" is for testing only */
-
-if (argv.server) {
-  const server = new DeepstreamServer();
-  server.start({
-    port: 6020,
-    persist: ['light-control']
+if (argv.config) {
+  const config = JSON.parse(readFileSync(argv.config, 'utf8'));
+  const app = IOC.get(IwApplication);
+  process.on('SIGINT', async () => {
+    await app.stop();
+    process.nextTick(() => process.exit(0));
   });
-
-  const advertisement = new UdpAdvertisement();
-  advertisement.start({ requestPort: 6031 });
-
-//  const mongodb = new MongoDBQueryProvider(client)
-//  mongodb.connect("mongodb://localhost:27017/iw-db")
-
-} else if (argv.client) {
-  const client = new IwDeepstreamClient();
-  const discovery = new UdpDiscovery(client);
-
-  discovery.start({ requestPort: 6031 });
-} else if (argv.test) {
-  (async () => {
-    const client = deepstream('localhost:6020');
-    await client.login({ username: 'test' });
-    client.record.listen('test', async (match, response) => {
-      const record = client.record.getRecord(match);
-      await record.whenReady();
-      record.set({foo: 'bar'})
-      response.accept();
-    });
-    const record = client.record.getRecord('test');
-    record.subscribe(undefined, (data) => console.log(data));
-  })();
+  app.start(config);
+} else {
+  process.stdout.write('Please specify the startup configuration with the --config option.\n');
+  process.exit(-1);
 }

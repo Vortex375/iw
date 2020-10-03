@@ -1,0 +1,16 @@
+{
+  "load": [
+    "./modules/deepstream-server",
+    "./modules/udp-advertisement"
+  ],
+  "modules": [
+    {
+      "component": "deepstream-server",
+      "config": { "port": 6020 }
+    },
+    {
+      "component": "udp-advertisement",
+      "config": { "requestPort": 6031 }
+    }
+  ]
+}

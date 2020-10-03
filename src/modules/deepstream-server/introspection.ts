@@ -3,6 +3,7 @@ import _ from 'lodash';
 import * as path_ from 'path';
 import { RpcSchema } from '../deepstream-client/deepstream-client';
 import * as logging from '../../lib/logging';
+import { Component } from 'iw-ioc';
 
 export const INTROSPECTION_ROOT = 'iw-introspection/';
 export const NODE_ROOT = INTROSPECTION_ROOT + 'nodes/';
@@ -13,6 +14,7 @@ export const INDEX_RECORD = '.iw-index';
 
 const log = logging.getLogger('Introspection');
 
+@Component()
 export class Introspection {
 
   private readonly records: Map<string, any> = new Map();

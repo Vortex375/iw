@@ -13,6 +13,7 @@ import * as logging from '../../lib/logging';
 import { Service, State, setIntrospectionRecord } from '../../lib/registry';
 import { CONNECTION_STATE } from '@deepstream/client/dist/src/constants';
 import { NODE_ROOT } from '../deepstream-server/introspection';
+import { Component } from 'iw-ioc';
 
 const log = logging.getLogger('DeepstreamClient');
 
@@ -66,6 +67,7 @@ export interface DeepstreamClientConfig {
   friendlyName?: string;
 }
 
+@Component(SERVICE_TYPE)
 export class IwDeepstreamClient extends Service {
 
   private ds: DeepstreamClient | undefined;

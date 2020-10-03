@@ -3,9 +3,9 @@
 import * as logging from '../../lib/logging';
 import { Service, State } from '../../lib/registry';
 import { IwDeepstreamClient, DeepstreamClientConfig } from '../deepstream-client';
-
-import * as _ from 'lodash';
+import _ from 'lodash';
 import dgram = require('dgram');
+import { Component, ConstructorParameters } from 'iw-ioc';
 
 const log = logging.getLogger('UdpDiscovery');
 
@@ -37,6 +37,8 @@ export interface UdpDiscoveryConfig {
   clientConfig?: any;
 }
 
+@Component('udp-discovery')
+@ConstructorParameters([IwDeepstreamClient])
 export class UdpDiscovery extends Service {
 
   private socket: dgram.Socket;
