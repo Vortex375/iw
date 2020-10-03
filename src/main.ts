@@ -20,13 +20,15 @@ import minimist from 'minimist';
 import { IOC } from 'iw-ioc';
 import { IwApplication } from './modules/application';
 import { readFileSync } from 'fs';
+import { jsonc } from 'jsonc';
 
 const argv = minimist(process.argv.slice(2));
 
 if (argv.config) {
-  const config = JSON.parse(readFileSync(argv.config, 'utf8'));
+  const config = jsonc.parse(readFileSync(argv.config, 'utf8'));
   const app = IOC.get(IwApplication);
-  process.on('SIGINT', async () => {
+  process.once('SIGINT', async () => {
+    process.on('SIGINT', () => process.exit(-20));
     await app.stop();
     process.nextTick(() => process.exit(0));
   });
