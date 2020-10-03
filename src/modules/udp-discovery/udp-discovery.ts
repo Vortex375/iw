@@ -53,8 +53,14 @@ export class UdpDiscovery extends Service {
     super('udp-discovery');
 
     if (this.client) {
-      client.on('connected', () => this.pause());
-      client.on('disconnected', () => this.resume());
+      client.on('connected', () => {
+        this.emit('connected');
+        this.pause();
+      });
+      client.on('disconnected', () => {
+        this.emit('disconnected');
+        this.resume();
+      });
       this.on('discovered', (addr) => {
         this.pause();
         const clientConfig = _.assign(this.clientConfig || {}, {
