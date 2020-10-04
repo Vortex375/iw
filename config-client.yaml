@@ -1,0 +1,6 @@
+load:
+  - ./modules/udp-discovery
+modules:
+  - component: udp-discovery
+    config:
+      requestPort: 6031

@@ -17,23 +17,41 @@
 */
 
 import minimist from 'minimist';
-import { IOC } from 'iw-ioc';
-import { IwApplication } from './modules/application';
 import { readFileSync } from 'fs';
+import { extname } from 'path';
 import { jsonc } from 'jsonc';
+import yaml from 'js-yaml';
+import { IOC } from 'iw-ioc';
+import { ApplicationConfig, IwApplication } from './modules/application';
 
 const argv = minimist(process.argv.slice(2));
 
-if (argv.config) {
-  const config = jsonc.parse(readFileSync(argv.config, 'utf8'));
-  const app = IOC.get(IwApplication);
-  process.once('SIGINT', async () => {
-    process.on('SIGINT', () => process.exit(-20));
-    await app.stop();
-    process.nextTick(() => process.exit(0));
-  });
-  app.start(config);
-} else {
+if ( ! argv.config) {
   process.stdout.write('Please specify the startup configuration with the --config option.\n');
   process.exit(-1);
 }
+
+let config: ApplicationConfig;
+switch (extname(argv.config)) {
+  case '.js':
+    config = require.main.require(argv.config);
+    break;
+  case '.yaml':
+  case '.yml':
+    config = yaml.load(readFileSync(argv.config, 'utf8'));
+    break;
+  case '.jsonc':
+  case '.json':
+  default:
+    config = jsonc.parse(readFileSync(argv.config, 'utf8'));
+}
+
+const app = IOC.get(IwApplication);
+
+process.once('SIGINT', async () => {
+  process.on('SIGINT', () => process.exit(-20));
+  await app.stop();
+  process.nextTick(() => process.exit(0));
+});
+
+app.start(config);
