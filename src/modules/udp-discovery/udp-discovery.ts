@@ -5,7 +5,7 @@ import { Service, State } from '../../lib/registry';
 import { IwDeepstreamClient, DeepstreamClientConfig } from '../deepstream-client';
 import _ from 'lodash';
 import dgram = require('dgram');
-import { Component, ConstructorParameters } from 'iw-ioc';
+import { Component, Inject } from 'iw-ioc';
 
 const log = logging.getLogger('UdpDiscovery');
 
@@ -38,7 +38,7 @@ export interface UdpDiscoveryConfig {
 }
 
 @Component('udp-discovery')
-@ConstructorParameters([IwDeepstreamClient])
+@Inject([IwDeepstreamClient])
 export class UdpDiscovery extends Service {
 
   private socket: dgram.Socket;
