@@ -127,11 +127,17 @@ export class Introspection {
     const dirName = path_.posix.dirname(path);
     const dir = this.client.record.getList(path_.posix.join(dirName, INDEX_RECORD));
     dir.whenReady(() => {
-      dir.removeEntry(path_.posix.basename(path));
-      log.debug({ path }, `deleted record ${path}`);
-      if (dir.isEmpty()) {
-        this.rmdir(dirName);
-      }
+      dir.removeEntry(path_.posix.basename(path), undefined, (err) => {
+        if (err) {
+          log.error({ err, path }, `error while deleting ${path}`);
+        } else {
+          log.debug({ path }, `deleted record ${path}`);
+          if (dir.isEmpty()) {
+            this.rmdir(dirName);
+          }
+        }
+        dir.discard();
+      });
     });
   }
 
@@ -160,6 +166,7 @@ export class Introspection {
         if (parentDir.isEmpty()) {
           this.rmdir(parentDirName);
         }
+        parentDir.discard();
       });
     });
   }
