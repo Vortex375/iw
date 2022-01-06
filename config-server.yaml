@@ -1,6 +1,7 @@
 load:
   - ./modules/deepstream-server
   - ./modules/udp-advertisement
+  - ./modules/web-server
 modules:
   - component: deepstream-server
     config:
@@ -8,3 +9,9 @@ modules:
   - component: udp-advertisement
     config:
       requestPort: 6031
+  - component: web-server
+    config:
+      port: 6080
+      host: localhost
+      apps:
+        iw-introspection: node_modules/iw-introspection

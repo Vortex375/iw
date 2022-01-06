@@ -9,7 +9,6 @@ import { CHANNELS_SERVER_PLUGIN_NAME } from './channels-server';
 import { MONITORING_PLUGIN_NAME, IwMonitoring } from './monitoring';
 import { PartialDeepstreamConfig } from '@deepstream/types';
 import { NODE_ROOT } from './introspection';
-import { WEB_SERVER_PLUGIN_NAME } from './web-server';
 import { Component } from 'iw-ioc';
 
 const SERVICE_TYPE = 'deepstream-server';
@@ -59,15 +58,6 @@ const DEEPSTREAM_CONFIG: PartialDeepstreamConfig = {
       name: CHANNELS_SERVER_PLUGIN_NAME,
       options: {
         port: DEFAULT_CHANNELS_PORT
-      }
-    },
-    introspectionWebApp: {
-      name: WEB_SERVER_PLUGIN_NAME,
-      options: {
-        port: DEFAULT_HTTP_PORT,
-        apps: {
-          '/': 'node_modules/iw-introspection'
-        }
       }
     }
   },
