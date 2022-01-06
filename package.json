@@ -17,8 +17,8 @@
   },
   "dependencies": {
     "@deepstream/cache-redis": "^2.0.9",
-    "@deepstream/client": "^5.2.4",
-    "@deepstream/server": "^5.2.3",
+    "@deepstream/client": "^5.2.5",
+    "@deepstream/server": "^5.2.6",
     "@deepstream/types": "^2.2.0",
     "bunyan": "^1.8.12",
     "colors": "^1.4.0",
