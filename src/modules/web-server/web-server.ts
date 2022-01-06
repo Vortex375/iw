@@ -13,7 +13,8 @@ const SERVICE_NAME = 'web-server';
 export interface WebServerConfig {
   port: number;
   host: string;
-  apps: { [virtualHost: string]: string | express.Router };
+  app?: string | express.Router;
+  apps?: { [virtualHost: string]: string | express.Router };
 }
 
 @Component(SERVICE_NAME)
@@ -32,18 +33,30 @@ export class WebServer extends Service {
       this.setState(State.BUSY, 'setting up...');
       const app = express();
 
-      log.debug(config.apps, 'configuring web apps');
-      _.forEach(config.apps, (webApp, virtualHost) => {
-        if (typeof webApp === 'string') {
-          const appRouter = express.Router();
-          appRouter.use(express.static(webApp));
-          appRouter.use((req, res) => res.sendStatus(404));
-          app.use(vhost(`${virtualHost}.${config.host}`, appRouter));
+      if (config.app) {
+        log.debug(config.app, 'configuring web app');
+        if (typeof config.app === 'string') {
+          app.use(express.static(config.app));
+          app.use((req, res) => res.sendStatus(404));
         } else {
-          app.use(vhost(`${virtualHost}.${config.host}`, webApp));
+          app.use(config.app);
         }
-      });
-      app.use(this.welcomePage.bind(this));
+      } else if (config.apps) {
+        log.debug(config.apps, 'configuring web apps');
+        _.forEach(config.apps, (webApp, virtualHost) => {
+          if (typeof webApp === 'string') {
+            const appRouter = express.Router();
+            appRouter.use(express.static(webApp));
+            appRouter.use((req, res) => res.sendStatus(404));
+            app.use(vhost(`${virtualHost}.${config.host}`, appRouter));
+          } else {
+            app.use(vhost(`${virtualHost}.${config.host}`, webApp));
+          }
+        });
+        app.use(this.welcomePage.bind(this));
+      } else {
+        this.setState(State.ERROR, 'no web applications configured');
+      }
 
       this.server = app.listen(config.port, err => err ? reject(err) : resolve());
     });
