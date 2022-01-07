@@ -30,7 +30,7 @@ const DEEPSTREAM_CONFIG: PartialDeepstreamConfig = {
     name: 'redis'
   },
   httpServer: {
-    type: 'default',
+    type: 'uws',
     options: {
       healthCheckPath: '/health-check',
       port: DEFAULT_DEEPSTREAM_PORT,
@@ -41,13 +41,13 @@ const DEEPSTREAM_CONFIG: PartialDeepstreamConfig = {
     {
       type: 'ws-binary',
       options: {
-        // urlPath: DEFAULT_WS_PATH
+        urlPath: DEFAULT_WS_PATH
       }
     },
     {
       type: 'http',
       options: {
-        authPath: DEFAULT_HTTP_PATH + '-auth',
+        authPath: DEFAULT_HTTP_PATH + '/auth',
         getPath: DEFAULT_HTTP_PATH,
         postPath: DEFAULT_HTTP_PATH
       }

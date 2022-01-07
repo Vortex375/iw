@@ -3,7 +3,7 @@ import * as logging from '../../lib/logging';
 import express from 'express';
 import { Server } from 'http';
 import _ from 'lodash';
-import { Component } from 'iw-ioc';
+import { Component, Scoped } from 'iw-ioc';
 import vhost from 'vhost';
 
 const log = logging.getLogger('WebServer');
@@ -18,6 +18,7 @@ export interface WebServerConfig {
 }
 
 @Component(SERVICE_NAME)
+@Scoped()
 export class WebServer extends Service {
 
   private server: Server;
@@ -34,7 +35,7 @@ export class WebServer extends Service {
       const app = express();
 
       if (config.app) {
-        log.debug(config.app, 'configuring web app');
+        log.debug({ app: config.app }, 'configuring web app');
         if (typeof config.app === 'string') {
           app.use(express.static(config.app));
           app.use((req, res) => res.sendStatus(404));

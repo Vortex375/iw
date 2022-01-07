@@ -2,8 +2,11 @@ import { DeepstreamPlugin, DeepstreamLogger, DeepstreamServices, DeepstreamConfi
          LOG_LEVEL, NamespacedLogger, MetaData, LoggerPlugin } from '@deepstream/types';
 import { registerPlugin } from '@deepstream/server/dist/src/config/config-initialiser';
 import * as logging from '../../lib/logging';
+import XRegExp from 'xregexp';
 
 const serverLog = logging.getLogger('Deepstream', 'Server');
+
+const UNPRINTABLE_PATTERN = XRegExp('[\\p{Cc}\\p{Cf}]', 'g');
 
 class LogAdapter extends DeepstreamPlugin implements DeepstreamLogger {
   readonly description = "Adapter to plug deepstream's logging into iw logging";
@@ -45,21 +48,22 @@ class LogAdapter extends DeepstreamPlugin implements DeepstreamLogger {
   }
 
   private log(level: LOG_LEVEL, event: string, message: string, metaData: MetaData = {}) {
+    const messageEscaped = XRegExp.replace(message, UNPRINTABLE_PATTERN, '');
     switch (level) {
       case LOG_LEVEL.DEBUG:
-        serverLog.debug(metaData, `${event} | ${message || ''}`);
+        serverLog.debug(metaData, `${event} | ${messageEscaped || ''}`);
         break;
       case LOG_LEVEL.INFO:
-        serverLog.info(metaData, `${event} | ${message || ''}`);
+        serverLog.info(metaData, `${event} | ${messageEscaped || ''}`);
         break;
       case LOG_LEVEL.WARN:
-        serverLog.warn(metaData, `${event} | ${message || ''}`);
+        serverLog.warn(metaData, `${event} | ${messageEscaped || ''}`);
         break;
       case LOG_LEVEL.ERROR:
-        serverLog.error(metaData, `${event} | ${message || ''}`);
+        serverLog.error(metaData, `${event} | ${messageEscaped || ''}`);
         break;
       case LOG_LEVEL.FATAL:
-        serverLog.fatal(metaData, `${event} | ${message || ''}`);
+        serverLog.fatal(metaData, `${event} | ${messageEscaped || ''}`);
         break;
     }
   }

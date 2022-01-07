@@ -178,7 +178,7 @@ function registerInstance(type: string, state: State, name: string, instance: Se
     instance,
     state,
     message: 'Initial State',
-    errorDiagnostic: undefined,
+    errorDiagnostic: undefined
   };
 
   INSTANCES_BY_TYPE.get(type).push(serviceObject);
