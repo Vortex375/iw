@@ -30,7 +30,7 @@ const DEEPSTREAM_CONFIG: PartialDeepstreamConfig = {
     name: 'redis'
   },
   httpServer: {
-    type: 'uws',
+    type: 'default',
     options: {
       healthCheckPath: '/health-check',
       port: DEFAULT_DEEPSTREAM_PORT,
