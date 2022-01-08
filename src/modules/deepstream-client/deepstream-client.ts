@@ -11,7 +11,7 @@ import * as process from 'process';
 import { EventEmitter } from 'events';
 import * as logging from '../../lib/logging';
 import { Service, State, setIntrospectionRecord } from '../../lib/registry';
-import { CONNECTION_STATE } from '@deepstream/client/dist/src/constants';
+import { CONNECTION_STATE, EVENT } from '@deepstream/client/dist/src/constants';
 import { NODE_ROOT } from '../deepstream-server/introspection';
 import { Component } from 'iw-ioc';
 
@@ -262,6 +262,9 @@ export class IwDeepstreamClient extends Service {
 
   getRecord(name: string, schema?: any): Record {
     const record = this.ds.record.getRecord(name);
+    record.on(EVENT.RECORD_ERROR, err => {
+      log.error(`error on record ${name}:`, err);
+    })
     const deleteFunc = record.delete.bind(record);
     record.delete = () => {
       // this.introspection.unregisterRecord(name);
