@@ -48,7 +48,7 @@ class LogAdapter extends DeepstreamPlugin implements DeepstreamLogger {
   }
 
   private log(level: LOG_LEVEL, event: string, message: string, metaData: MetaData = {}) {
-    const messageEscaped = XRegExp.replace(message, UNPRINTABLE_PATTERN, '');
+    const messageEscaped = XRegExp.replace(message ?? '', UNPRINTABLE_PATTERN, '');
     switch (level) {
       case LOG_LEVEL.DEBUG:
         serverLog.debug(metaData, `${event} | ${messageEscaped || ''}`);
