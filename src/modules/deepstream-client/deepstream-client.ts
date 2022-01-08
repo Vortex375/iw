@@ -264,7 +264,7 @@ export class IwDeepstreamClient extends Service {
     const record = this.ds.record.getRecord(name);
     record.on(EVENT.RECORD_ERROR, err => {
       log.error(`error on record ${name}:`, err);
-    })
+    });
     const deleteFunc = record.delete.bind(record);
     record.delete = () => {
       // this.introspection.unregisterRecord(name);
