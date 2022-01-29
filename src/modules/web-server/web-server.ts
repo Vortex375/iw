@@ -59,7 +59,11 @@ export class WebServer extends Service {
         this.setState(State.ERROR, 'no web applications configured');
       }
 
-      this.server = app.listen(config.port, err => err ? reject(err) : resolve());
+      this.server = app.listen(config.port, resolve);
+      this.server.on('error', (err) => {
+        log.error(err, 'http server failed');
+        this.setState(State.ERROR, `http server failed: ${err.name} ${err.message}`);
+      });
     });
     this.setState(State.OK, `web app server listening on :${config.port}`);
   }
